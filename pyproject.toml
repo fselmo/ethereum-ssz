@@ -1,0 +1,156 @@
+[build-system]
+requires = ["hatchling>=1.25.0,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ethereum-ssz"
+version = "0.1.0"
+description = "SSZ (Simple Serialize) encoding and decoding for Ethereum types"
+readme = "README.md"
+authors = [
+    { name = "Ethereum Foundation" }
+]
+keywords = ["ethereum", "ssz", "serialization", "encoding", "decoding"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "ethereum-types>=0.2.1,<1",
+]
+
+[project.license]
+file = "LICENSE.md"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0,<9",
+    "pytest-cov>=6.0.0,<7",
+    "pytest-xdist>=3.6.1,<4",
+]
+lint = [
+    "ruff>=0.5.0,<1",
+]
+typecheck = [
+    "mypy>=1.4.0,<2",
+    "types-setuptools",
+]
+dev = [
+    "ethereum-ssz[test,lint,typecheck]",
+    "tox>=4.23.0,<5",
+]
+
+[project.urls]
+Homepage = "https://github.com/ethereum/ethereum-ssz"
+Source = "https://github.com/ethereum/ethereum-ssz"
+Issues = "https://github.com/ethereum/ethereum-ssz/issues"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build]
+exclude = [
+    ".*",
+    "tests/",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ethereum_ssz"]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "B",  # flake8-bugbear
+    "W",  # pycodestyle warnings
+    "I",  # isort
+    "N",  # pep8-naming
+    "D",  # pydocstyle
+    "UP", # pyupgrade
+]
+fixable = ["I", "B", "E", "F", "W", "D", "UP"]
+ignore = [
+    "D203",  # one-blank-line-before-class
+    "D212",  # multi-line-summary-first-line
+    "D415",  # ends-in-punctuation
+    "D205",  # blank-line-after-summary
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+force-single-line = false
+known-first-party = ["ethereum_ssz"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "D",      # Don't require docstrings in tests
+    "F401",   # Allow unused imports in tests
+]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+no_implicit_reexport = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "ethereum_types.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0.0"
+testpaths = ["tests"]
+python_files = "test_*.py"
+pythonpath = ["."]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=src/ethereum_ssz",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-branch",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.coverage.run]
+source = ["src/ethereum_ssz"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipython>=8.0.0",
+    "build>=1.2.0,<2",
+]
