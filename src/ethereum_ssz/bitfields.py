@@ -234,7 +234,6 @@ class Bitlist:
         return hash_tree_root_bitlist(self)
 
     @classmethod
-    @classmethod
     def deserialize(cls, data: bytes, max_length: int) -> "Bitlist":
         """
         Deserialize from SSZ bytes.

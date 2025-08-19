@@ -1,5 +1,7 @@
 # Missing Operations in ethereum-types
 
+**Note:** This document describes limitations in the `ethereum-types` library (not `ethereum-ssz`) that prevent full arithmetic compatibility with remerkleable's uint types. These missing operations cause 4 expected test failures in our test suite but do not affect SSZ serialization functionality.
+
 This document lists operations that are present in remerkleable but missing or behave differently in ethereum-types.
 
 ## 1. Bitwise Shift Operations

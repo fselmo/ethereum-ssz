@@ -105,7 +105,7 @@ class Union:
         return hash(value_root + selector_bytes)
 
 
-def create_union_class(*types: type) -> type[Union]:
+def create_union_class(name: str, types: list[type]) -> type[Union]:
     """
     Create a Union class with specific types.
 
@@ -113,13 +113,13 @@ def create_union_class(*types: type) -> type[Union]:
     similar to how typing.Union works but for SSZ unions.
 
     Example:
-        MyUnion = create_union_class(uint16, uint32, None)
+        MyUnion = create_union_class("MyUnion", [uint16, uint32, None])
         u = MyUnion(selector=0, value=uint16(42))
     """
 
     class SpecificUnion(Union):
         def __init__(self, selector: int, value: Any):
-            super().__init__(list(types), selector, value)
+            super().__init__(types, selector, value)
 
         def __repr__(self) -> str:
             type_names = []

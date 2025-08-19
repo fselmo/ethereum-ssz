@@ -37,6 +37,8 @@ class Container:
     def serialize(self) -> bytes:
         """Serialize the container to SSZ bytes."""
         from .composite import (
+            List,
+            Vector,
             encode_composite,
             is_variable_size,
         )
@@ -51,8 +53,16 @@ class Container:
         for field_name, field_type in field_list:
             value = getattr(self, field_name)
             elements.append(value)
-            element_types.append(field_type)
-            variable_sizes.append(is_variable_size(field_type))
+            # For composite types (Vector, List, Container), pass the instance
+            # For basic types, pass the type
+            if isinstance(value, (Vector, List, Container)):
+                # Pass instance for size calculation
+                element_types.append(value)
+                variable_sizes.append(is_variable_size(value))
+            else:
+                actual_type = type(value) if value is not None else field_type
+                element_types.append(actual_type)
+                variable_sizes.append(is_variable_size(actual_type))
 
         # Use the composite encoder which handles offsets properly
         return encode_composite(elements, element_types, variable_sizes)

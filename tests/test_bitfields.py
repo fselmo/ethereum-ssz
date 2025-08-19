@@ -31,7 +31,7 @@ def chunk(data: str) -> bytes:
         data = bytes.fromhex(data)
     if len(data) >= 32:
         return data[:32]
-    return data + b'\x00' * (32 - len(data))
+    return data + b"\x00" * (32 - len(data))
 
 
 class TestBitvector:
@@ -46,7 +46,7 @@ class TestBitvector:
 
         # Test serialization
         encoded = ssz.encode(bv)
-        assert encoded == b'\x2b'
+        assert encoded == b"\x2b"
 
         # Test hash tree root - should be chunk("2b")
         htr = hash_tree_root(bv)
@@ -61,7 +61,7 @@ class TestBitvector:
         bv = Bitvector([0, 1, 0, 1], length=4)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\x0a'
+        assert encoded == b"\x0a"
 
         htr = hash_tree_root(bv)
         expected = Bytes32(chunk("0a"))
@@ -75,7 +75,7 @@ class TestBitvector:
         bv = Bitvector([0, 1, 0], length=3)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\x02'
+        assert encoded == b"\x02"
 
         htr = hash_tree_root(bv)
         expected = Bytes32(chunk("02"))
@@ -91,7 +91,7 @@ class TestBitvector:
         bv = Bitvector([1, 0, 1, 0, 0, 0, 1, 1, 0, 1], length=10)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\xc5\x02'
+        assert encoded == b"\xc5\x02"
 
         htr = hash_tree_root(bv)
         expected = Bytes32(chunk("c502"))
@@ -103,10 +103,12 @@ class TestBitvector:
         # bits = [1,0,1,0,0,0,1,1,0,1,0,0,0,0,1,1]
         # Byte 0: 11000101 = 0xc5
         # Byte 1: 11000010 = 0xc2
-        bv = Bitvector([1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], length=16)
+        bv = Bitvector(
+            [1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], length=16
+        )
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\xc5\xc2'
+        assert encoded == b"\xc5\xc2"
 
         htr = hash_tree_root(bv)
         expected = Bytes32(chunk("c5c2"))
@@ -117,11 +119,11 @@ class TestBitvector:
         bv = Bitvector([1] * 512, length=512)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\xff' * 64
+        assert encoded == b"\xff" * 64
 
         # For 512 bits = 64 bytes = 2 chunks, merkle root is h(chunk1, chunk2)
         htr = hash_tree_root(bv)
-        expected = Bytes32(h(b'\xff' * 32, b'\xff' * 32))
+        expected = Bytes32(h(b"\xff" * 32, b"\xff" * 32))
         assert htr == expected
 
     def test_odd_bitvector_513(self):
@@ -130,15 +132,14 @@ class TestBitvector:
 
         encoded = ssz.encode(bv)
         # 513 bits = 65 bytes
-        assert encoded == b'\xff' * 64 + b'\x01'
+        assert encoded == b"\xff" * 64 + b"\x01"
 
         # 513 bits = 65 bytes = 3 chunks, need to merkleize properly
         htr = hash_tree_root(bv)
         # h(h(chunk0, chunk1), h(chunk2, zero))
-        expected = Bytes32(h(
-            h(b'\xff' * 32, b'\xff' * 32),
-            h(chunk("01"), chunk(""))
-        ))
+        expected = Bytes32(
+            h(h(b"\xff" * 32, b"\xff" * 32), h(chunk("01"), chunk("")))
+        )
         assert htr == expected
 
 
@@ -151,7 +152,7 @@ class TestBitlist:
 
         # Empty bitlist encodes as just the sentinel bit
         encoded = ssz.encode(bl)
-        assert encoded == b'\x01'
+        assert encoded == b"\x01"
 
         # Hash tree root: h(chunk(""), chunk("00"))
         htr = hash_tree_root(bl)
@@ -165,7 +166,7 @@ class TestBitlist:
         # Bits: 11010100 = 0x2b
         # With sentinel at position 8: 100101011 = 0x012b (little-endian)
         encoded = ssz.encode(bl)
-        assert encoded == b'\x2b\x01'
+        assert encoded == b"\x2b\x01"
 
         # Hash tree root: h(chunk("2b"), chunk("08"))
         htr = hash_tree_root(bl)
@@ -179,7 +180,7 @@ class TestBitlist:
         # Bits: 0101 = 0x0a
         # With sentinel at position 4: 10101 = 0x1a
         encoded = ssz.encode(bl)
-        assert encoded == b'\x1a'
+        assert encoded == b"\x1a"
 
         # Hash tree root: h(chunk("0a"), chunk("04"))
         htr = hash_tree_root(bl)
@@ -193,7 +194,7 @@ class TestBitlist:
         # Bits: 010 = 0x02
         # With sentinel at position 3: 1010 = 0x0a
         encoded = ssz.encode(bl)
-        assert encoded == b'\x0a'
+        assert encoded == b"\x0a"
 
         # Hash tree root: h(chunk("02"), chunk("03"))
         htr = hash_tree_root(bl)
@@ -207,7 +208,7 @@ class TestBitlist:
         # Bits: 1010001101 = 0xc502
         # With sentinel at position 10: 11010001101 = 0x06c5
         encoded = ssz.encode(bl)
-        assert encoded == b'\xc5\x06'
+        assert encoded == b"\xc5\x06"
 
         # Hash tree root: h(chunk("c502"), chunk("0a"))
         htr = hash_tree_root(bl)
@@ -216,12 +217,14 @@ class TestBitlist:
 
     def test_bitlist_TFTFFFTTFTFFFFTT(self):
         """Test Bitlist[16] with all 16 bits."""
-        bl = Bitlist([1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], max_length=16)
+        bl = Bitlist(
+            [1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], max_length=16
+        )
 
         # Bits: 1010001101000011 = 0xc2c5
         # With sentinel at position 16: 11010001101000011 = 0x01c2c5
         encoded = ssz.encode(bl)
-        assert encoded == b'\xc5\xc2\x01'
+        assert encoded == b"\xc5\xc2\x01"
 
         # Hash tree root: h(chunk("c5c2"), chunk("10"))
         htr = hash_tree_root(bl)
@@ -234,7 +237,7 @@ class TestBitlist:
 
         # Single bit plus sentinel: 11 = 0x03
         encoded = ssz.encode(bl)
-        assert encoded == b'\x03'
+        assert encoded == b"\x03"
 
         # Hash tree root
         htr = hash_tree_root(bl)
@@ -249,12 +252,12 @@ class TestBitlist:
 
         # 512 bits of 1s plus sentinel
         encoded = ssz.encode(bl)
-        assert encoded == b'\xff' * 64 + b'\x01'
+        assert encoded == b"\xff" * 64 + b"\x01"
 
         # Hash tree root
         htr = hash_tree_root(bl)
         # h(h(ff*32, ff*32), chunk("0002"))
-        expected = Bytes32(h(h(b'\xff' * 32, b'\xff' * 32), chunk("0002")))
+        expected = Bytes32(h(h(b"\xff" * 32, b"\xff" * 32), chunk("0002")))
         assert htr == expected
 
     def test_odd_bitlist_513_full(self):
@@ -263,15 +266,12 @@ class TestBitlist:
 
         # 513 bits of 1s plus sentinel at position 513
         encoded = ssz.encode(bl)
-        assert encoded == b'\xff' * 64 + b'\x03'
+        assert encoded == b"\xff" * 64 + b"\x03"
 
         # Hash tree root
         htr = hash_tree_root(bl)
         # Contents: h(h(ff*32, ff*32), h(chunk("01"), chunk("")))
         # Mixed with length: h(contents, chunk("0102"))
-        contents = h(
-            h(b'\xff' * 32, b'\xff' * 32),
-            h(chunk("01"), chunk(""))
-        )
+        contents = h(h(b"\xff" * 32, b"\xff" * 32), h(chunk("01"), chunk("")))
         expected = Bytes32(h(contents, chunk("0102")))
         assert htr == expected

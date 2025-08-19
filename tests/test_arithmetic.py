@@ -71,7 +71,7 @@ class TestUintArithmetic:
         b = U32(0x01000000)
 
         assert a + b == U32(0x11000000)
-        assert a - b == U32(0x0f000000)
+        assert a - b == U32(0x0F000000)
         assert a // b == U32(16)
         assert a & b == U32(0)
         assert a | b == U32(0x11000000)
@@ -82,7 +82,7 @@ class TestUintArithmetic:
         b = U64(0x0100000000000000)
 
         assert a + b == U64(0x1100000000000000)
-        assert a - b == U64(0x0f00000000000000)
+        assert a - b == U64(0x0F00000000000000)
         assert a // b == U64(16)
 
     def test_uint128_arithmetic(self):
@@ -91,7 +91,7 @@ class TestUintArithmetic:
         b = U128(0x01000000000000000000000000000000)
 
         assert a + b == U128(0x11000000000000000000000000000000)
-        assert a - b == U128(0x0f000000000000000000000000000000)
+        assert a - b == U128(0x0F000000000000000000000000000000)
         assert a // b == U128(16)
 
     def test_uint256_arithmetic(self):
@@ -146,7 +146,7 @@ class TestUintBounds:
 
     def test_uint32_bounds(self):
         """Test U32 boundary conditions."""
-        max_val = U32(0xffffffff)
+        max_val = U32(0xFFFFFFFF)
         assert max_val == U32.MAX_VALUE
 
         # Overflow raises OverflowError
@@ -155,7 +155,7 @@ class TestUintBounds:
 
     def test_uint64_bounds(self):
         """Test U64 boundary conditions."""
-        max_val = U64(0xffffffffffffffff)
+        max_val = U64(0xFFFFFFFFFFFFFFFF)
         assert max_val == U64.MAX_VALUE
 
         # Overflow raises OverflowError
@@ -188,7 +188,9 @@ class TestUintShifts:
     These tests are marked as expected failures.
     """
 
-    @pytest.mark.xfail(reason="Shift operators not implemented in ethereum-types")
+    @pytest.mark.xfail(
+        reason="Shift operators not implemented in ethereum-types"
+    )
     def test_uint8_shifts(self):
         """Test shift operations on U8."""
         a = U8(0b10101010)
@@ -203,7 +205,9 @@ class TestUintShifts:
         assert a >> 2 == U8(0b00101010)
         assert a >> 4 == U8(0b00001010)
 
-    @pytest.mark.xfail(reason="Shift operators not implemented in ethereum-types")
+    @pytest.mark.xfail(
+        reason="Shift operators not implemented in ethereum-types"
+    )
     def test_uint16_shifts(self):
         """Test shift operations on U16."""
         a = U16(0b1010101010101010)
@@ -211,7 +215,9 @@ class TestUintShifts:
         assert a << 1 == U16(0b0101010101010100)
         assert a >> 1 == U16(0b0101010101010101)
 
-    @pytest.mark.xfail(reason="Shift operators not implemented in ethereum-types")
+    @pytest.mark.xfail(
+        reason="Shift operators not implemented in ethereum-types"
+    )
     def test_uint32_shifts(self):
         """Test shift operations on U32."""
         a = U32(0x80000000)
@@ -228,7 +234,9 @@ class TestUintPower:
     These tests are marked as expected failures.
     """
 
-    @pytest.mark.xfail(reason="Power operator not implemented in ethereum-types")
+    @pytest.mark.xfail(
+        reason="Power operator not implemented in ethereum-types"
+    )
     def test_uint_pow(self):
         """Test power operations."""
         assert U8(2) ** 3 == U8(8)
@@ -256,10 +264,10 @@ class TestUintBitwise:
         assert ~U8(0b10101010) == U8(0b01010101)
 
         assert ~U16(0) == U16(65535)
-        assert ~U16(0xff00) == U16(0x00ff)
+        assert ~U16(0xFF00) == U16(0x00FF)
 
-        assert ~U32(0) == U32(0xffffffff)
-        assert ~U64(0) == U64(0xffffffffffffffff)
+        assert ~U32(0) == U32(0xFFFFFFFF)
+        assert ~U64(0) == U64(0xFFFFFFFFFFFFFFFF)
 
     def test_uint_bitwise_ops(self):
         """Test various bitwise operations."""
@@ -271,12 +279,12 @@ class TestUintBitwise:
         assert a ^ b == U8(0b01011010)
 
         # Test with larger types
-        x = U32(0xff00ff00)
-        y = U32(0x00ff00ff)
+        x = U32(0xFF00FF00)
+        y = U32(0x00FF00FF)
 
         assert x & y == U32(0)
-        assert x | y == U32(0xffffffff)
-        assert x ^ y == U32(0xffffffff)
+        assert x | y == U32(0xFFFFFFFF)
+        assert x ^ y == U32(0xFFFFFFFF)
 
 
 class TestMixedOperations:

@@ -41,7 +41,7 @@ class TestBasicInstances:
         u16 = U16(65535)
         assert u16 == U16.MAX_VALUE
 
-        u32 = U32(0xffffffff)
+        u32 = U32(0xFFFFFFFF)
         assert u32 == U32.MAX_VALUE
 
         # Test zero values
@@ -57,7 +57,7 @@ class TestBasicInstances:
         U16(0)
         U16(65535)
         U32(0)
-        U32(0xffffffff)
+        U32(0xFFFFFFFF)
 
         # NOTE: ethereum-types raises OverflowError on construction with out-of-bounds values
         # This differs from wrapping behavior
@@ -81,6 +81,7 @@ class TestContainerTypes:
 
     def test_container_definition(self):
         """Test defining container types."""
+
         @dataclass
         class SimpleContainer(Container):
             a: U8
@@ -101,6 +102,7 @@ class TestContainerTypes:
 
     def test_container_equality(self):
         """Test container equality."""
+
         @dataclass
         class TestContainer(Container):
             x: U32
@@ -115,6 +117,7 @@ class TestContainerTypes:
 
     def test_container_nested(self):
         """Test nested containers."""
+
         @dataclass
         class Inner(Container):
             value: U16
@@ -136,6 +139,7 @@ class TestContainerTypes:
 
     def test_container_inheritance(self):
         """Test container inheritance patterns."""
+
         @dataclass
         class Base(Container):
             a: U8
@@ -151,8 +155,8 @@ class TestContainerTypes:
         # Should have both fields
         fields = obj.get_fields()
         field_names = [name for name, _ in fields]
-        assert 'a' in field_names
-        assert 'b' in field_names
+        assert "a" in field_names
+        assert "b" in field_names
 
 
 class TestVectorTypes:
@@ -198,7 +202,7 @@ class TestVectorTypes:
     def test_vector_of_vectors(self):
         """Test nested vectors."""
         inner_vecs = [
-            Vector([U8(i+j) for j in range(3)], length=3, element_type=U8)
+            Vector([U8(i + j) for j in range(3)], length=3, element_type=U8)
             for i in range(0, 6, 3)
         ]
         outer_vec = Vector(inner_vecs, length=2, element_type=Vector)
@@ -215,7 +219,9 @@ class TestListTypes:
     def test_list_creation(self):
         """Test creating lists."""
         # Variable-size list with max length
-        lst = SSZList([U8(i) for i in range(5)], max_length=10, element_type=U8)
+        lst = SSZList(
+            [U8(i) for i in range(5)], max_length=10, element_type=U8
+        )
         assert len(lst) == 5
         assert lst[0] == U8(0)
         assert lst[4] == U8(4)
@@ -244,7 +250,9 @@ class TestListTypes:
         assert lst[3] == U8(3)
 
         # Cannot exceed max length
-        lst2 = SSZList([U8(i) for i in range(10)], max_length=10, element_type=U8)
+        lst2 = SSZList(
+            [U8(i) for i in range(10)], max_length=10, element_type=U8
+        )
         with pytest.raises(ValueError):
             lst2.append(U8(10))
 
@@ -379,7 +387,7 @@ class TestUnionTypes:
     def test_union_creation(self):
         """Test creating union types."""
         # Simple union
-        UnionType = create_union_class(U8, U16, U32)
+        UnionType = create_union_class("UnionType", [U8, U16, U32])
 
         # Create with first type
         u1 = UnionType(selector=0, value=U8(42))
@@ -398,7 +406,7 @@ class TestUnionTypes:
 
     def test_union_with_none(self):
         """Test union with None option."""
-        UnionType = create_union_class(None, U16, U32)
+        UnionType = create_union_class("UnionType", [None, U16, U32])
 
         # None variant
         u_none = UnionType(selector=0, value=None)
@@ -412,7 +420,7 @@ class TestUnionTypes:
 
     def test_union_validation(self):
         """Test union validation."""
-        UnionType = create_union_class(U8, U16)
+        UnionType = create_union_class("UnionType", [U8, U16])
 
         # Valid selectors
         UnionType(selector=0, value=U8(1))
@@ -428,6 +436,7 @@ class TestUnionTypes:
 
     def test_union_with_containers(self):
         """Test union with container types."""
+
         @dataclass
         class ContainerA(Container):
             x: U8
@@ -437,7 +446,7 @@ class TestUnionTypes:
             y: U16
             z: U16
 
-        UnionType = create_union_class(ContainerA, ContainerB)
+        UnionType = create_union_class("UnionType", [ContainerA, ContainerB])
 
         # Union with first container
         u1 = UnionType(selector=0, value=ContainerA(x=U8(42)))
@@ -456,6 +465,7 @@ class TestTreeDepth:
 
     def test_container_tree_depth(self):
         """Test tree depth for containers."""
+
         @dataclass
         class OneField(Container):
             a: U8
@@ -498,6 +508,7 @@ class TestComplexInheritance:
 
     def test_multiple_inheritance(self):
         """Test multiple inheritance with containers."""
+
         @dataclass
         class Base1(Container):
             a: U8
@@ -512,6 +523,7 @@ class TestComplexInheritance:
 
     def test_deep_inheritance(self):
         """Test deep inheritance chains."""
+
         @dataclass
         class Level1(Container):
             a: U8

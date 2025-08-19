@@ -17,7 +17,6 @@ from ethereum_ssz import (
     Bitlist,
     Bitvector,
     Container,
-    Union,
     Vector,
     create_union_class,
     hash_tree_root,
@@ -53,7 +52,7 @@ class TestBasicTypes:
         """Test bit/boolean false."""
         value = False
         encoded = ssz.encode(value)
-        assert encoded == b'\x00'
+        assert encoded == b"\x00"
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("00")))
 
@@ -61,7 +60,7 @@ class TestBasicTypes:
         """Test bit/boolean true."""
         value = True
         encoded = ssz.encode(value)
-        assert encoded == b'\x01'
+        assert encoded == b"\x01"
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("01")))
 
@@ -69,7 +68,7 @@ class TestBasicTypes:
         """Test uint8 zero value."""
         value = U8(0)
         encoded = ssz.encode(value)
-        assert encoded == b'\x00'
+        assert encoded == b"\x00"
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("00")))
 
@@ -77,49 +76,51 @@ class TestBasicTypes:
         """Test uint8 max value."""
         value = U8(255)
         encoded = ssz.encode(value)
-        assert encoded == b'\xff'
+        assert encoded == b"\xff"
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("ff")))
 
     def test_uint16_value(self):
         """Test uint16 specific value 0xaabb."""
-        value = U16(0xaabb)
+        value = U16(0xAABB)
         encoded = ssz.encode(value)
-        assert encoded == b'\xbb\xaa'  # Little-endian
+        assert encoded == b"\xbb\xaa"  # Little-endian
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("bbaa")))
 
     def test_uint32_value(self):
         """Test uint32 specific value 0xdeadbeef."""
-        value = U32(0xdeadbeef)
+        value = U32(0xDEADBEEF)
         encoded = ssz.encode(value)
-        assert encoded == b'\xef\xbe\xad\xde'  # Little-endian
+        assert encoded == b"\xef\xbe\xad\xde"  # Little-endian
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("efbeadde")))
 
     def test_uint64_value(self):
         """Test uint64 specific value."""
-        value = U64(0x0123456789abcdef)
+        value = U64(0x0123456789ABCDEF)
         encoded = ssz.encode(value)
-        assert encoded == b'\xef\xcd\xab\x89\x67\x45\x23\x01'  # Little-endian
+        assert encoded == b"\xef\xcd\xab\x89\x67\x45\x23\x01"  # Little-endian
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("efcdab8967452301")))
 
     def test_uint128_value(self):
         """Test uint128 specific value."""
-        value = U128(0x0123456789abcdef0123456789abcdef)
+        value = U128(0x0123456789ABCDEF0123456789ABCDEF)
         encoded = ssz.encode(value)
         # Little-endian 16 bytes
-        assert encoded == b'\xef\xcd\xab\x89\x67\x45\x23\x01' * 2
+        assert encoded == b"\xef\xcd\xab\x89\x67\x45\x23\x01" * 2
         htr = hash_tree_root(value)
         assert htr == Bytes32(bytes.fromhex(chunk("efcdab8967452301" * 2)))
 
     def test_uint256_value(self):
         """Test uint256 specific value."""
-        value = U256(0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef)
+        value = U256(
+            0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+        )
         encoded = ssz.encode(value)
         # Little-endian 32 bytes
-        assert encoded == b'\xef\xcd\xab\x89\x67\x45\x23\x01' * 4
+        assert encoded == b"\xef\xcd\xab\x89\x67\x45\x23\x01" * 4
         htr = hash_tree_root(value)
         # For 32-byte values, the chunk is the value itself
         assert htr == Bytes32(encoded)
@@ -135,7 +136,7 @@ class TestBitfields:
         bv = Bitvector(bits, length=8)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\x2b'  # 00101011 in binary (LSB first)
+        assert encoded == b"\x2b"  # 00101011 in binary (LSB first)
 
         htr = hash_tree_root(bv)
         assert htr == Bytes32(bytes.fromhex(chunk("2b")))
@@ -147,7 +148,7 @@ class TestBitfields:
 
         encoded = ssz.encode(bl)
         # 0x2b for bits + 0x01 for sentinel at position 8
-        assert encoded == b'\x2b\x01'
+        assert encoded == b"\x2b\x01"
 
         # Hash tree root includes length mixing
         htr = hash_tree_root(bl)
@@ -163,7 +164,7 @@ class TestBitfields:
         bv = Bitvector(bits, length=4)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\x0a'  # 00001010 in binary
+        assert encoded == b"\x0a"  # 00001010 in binary
 
         htr = hash_tree_root(bv)
         assert htr == Bytes32(bytes.fromhex(chunk("0a")))
@@ -175,7 +176,7 @@ class TestBitfields:
 
         encoded = ssz.encode(bl)
         # 0x0a for bits + sentinel at position 4 = 0x1a
-        assert encoded == b'\x1a'  # 00011010 with sentinel at bit 4
+        assert encoded == b"\x1a"  # 00011010 with sentinel at bit 4
 
     def test_bitvector512_all_ones(self):
         """Test Bitvector[512] with all bits set."""
@@ -183,7 +184,7 @@ class TestBitfields:
         bv = Bitvector(bits, length=512)
 
         encoded = ssz.encode(bv)
-        assert encoded == b'\xff' * 64  # 512 bits = 64 bytes
+        assert encoded == b"\xff" * 64  # 512 bits = 64 bytes
 
         htr = hash_tree_root(bv)
         # Multiple chunks will be merkleized
@@ -198,7 +199,7 @@ class TestBitfields:
 
         encoded = ssz.encode(bv)
         assert len(encoded) == 65  # 513 bits = 65 bytes
-        assert encoded[:64] == b'\xff' * 64
+        assert encoded[:64] == b"\xff" * 64
         assert encoded[64] == 0x01  # Last bit set
 
 
@@ -223,7 +224,7 @@ class TestByteArrays:
         lst = SSZList([], max_length=10, element_type=U8)
 
         encoded = ssz.encode(lst)
-        assert encoded == b''
+        assert encoded == b""
 
         htr = hash_tree_root(lst)
         # Empty list with length mixed in
@@ -243,29 +244,31 @@ class TestContainers:
 
     def test_single_field_struct(self):
         """Test SingleFieldTestStruct container."""
+
         @dataclass
         class SingleFieldTestStruct(Container):
             A: U8
 
-        obj = SingleFieldTestStruct(A=U8(0xab))
+        obj = SingleFieldTestStruct(A=U8(0xAB))
 
         encoded = ssz.encode(obj)
-        assert encoded == b'\xab'
+        assert encoded == b"\xab"
 
         htr = hash_tree_root(obj)
         assert htr == Bytes32(bytes.fromhex(chunk("ab")))
 
     def test_small_test_struct(self):
         """Test SmallTestStruct with two uint16 fields."""
+
         @dataclass
         class SmallTestStruct(Container):
             A: U16
             B: U16
 
-        obj = SmallTestStruct(A=U16(0xaabb), B=U16(0xccdd))
+        obj = SmallTestStruct(A=U16(0xAABB), B=U16(0xCCDD))
 
         encoded = ssz.encode(obj)
-        assert encoded == b'\xbb\xaa\xdd\xcc'  # Little-endian
+        assert encoded == b"\xbb\xaa\xdd\xcc"  # Little-endian
 
         htr = hash_tree_root(obj)
         # h(chunk("bbaa"), chunk("ddcc"))
@@ -274,6 +277,7 @@ class TestContainers:
 
     def test_fixed_test_struct(self):
         """Test FixedTestStruct with mixed field types."""
+
         @dataclass
         class FixedTestStruct(Container):
             A: U8
@@ -281,17 +285,15 @@ class TestContainers:
             C: U32
 
         obj = FixedTestStruct(
-            A=U8(0x01),
-            B=U64(0x0203040506070809),
-            C=U32(0x0a0b0c0d)
+            A=U8(0x01), B=U64(0x0203040506070809), C=U32(0x0A0B0C0D)
         )
 
         encoded = ssz.encode(obj)
         # All fields concatenated in little-endian
         assert encoded == (
-            b'\x01' +  # A
-            b'\x09\x08\x07\x06\x05\x04\x03\x02' +  # B
-            b'\x0d\x0c\x0b\x0a'  # C
+            b"\x01"  # A
+            + b"\x09\x08\x07\x06\x05\x04\x03\x02"  # B
+            + b"\x0d\x0c\x0b\x0a"  # C
         )
 
 
@@ -300,11 +302,11 @@ class TestUnions:
 
     def test_single_type_union(self):
         """Test Union[uint16] with single type."""
-        UnionType = create_union_class(U16)
-        u = UnionType(selector=0, value=U16(0xaabb))
+        UnionType = create_union_class("UnionType", [U16])
+        u = UnionType(selector=0, value=U16(0xAABB))
 
         encoded = ssz.encode(u)
-        assert encoded == b'\x00\xbb\xaa'  # selector + value
+        assert encoded == b"\x00\xbb\xaa"  # selector + value
 
         htr = hash_tree_root(u)
         # h(chunk("bbaa"), chunk("00"))
@@ -313,11 +315,11 @@ class TestUnions:
 
     def test_multi_type_union_first(self):
         """Test Union[uint16, uint32] selecting first type."""
-        UnionType = create_union_class(U16, U32)
-        u = UnionType(selector=0, value=U16(0xaabb))
+        UnionType = create_union_class("UnionType", [U16, U32])
+        u = UnionType(selector=0, value=U16(0xAABB))
 
         encoded = ssz.encode(u)
-        assert encoded == b'\x00\xbb\xaa'
+        assert encoded == b"\x00\xbb\xaa"
 
         htr = hash_tree_root(u)
         expected = h(chunk("bbaa"), chunk("00"))
@@ -325,11 +327,11 @@ class TestUnions:
 
     def test_multi_type_union_second(self):
         """Test Union[uint16, uint32] selecting second type."""
-        UnionType = create_union_class(U16, U32)
-        u = UnionType(selector=1, value=U32(0xdeadbeef))
+        UnionType = create_union_class("UnionType", [U16, U32])
+        u = UnionType(selector=1, value=U32(0xDEADBEEF))
 
         encoded = ssz.encode(u)
-        assert encoded == b'\x01\xef\xbe\xad\xde'
+        assert encoded == b"\x01\xef\xbe\xad\xde"
 
         htr = hash_tree_root(u)
         expected = h(chunk("efbeadde"), chunk("01"))
@@ -337,11 +339,11 @@ class TestUnions:
 
     def test_union_with_none(self):
         """Test Union[None, uint16] selecting None."""
-        UnionType = create_union_class(None, U16)
+        UnionType = create_union_class("UnionType", [None, U16])
         u = UnionType(selector=0, value=None)
 
         encoded = ssz.encode(u)
-        assert encoded == b'\x00'  # Just selector for None
+        assert encoded == b"\x00"  # Just selector for None
 
         htr = hash_tree_root(u)
         expected = h(chunk(""), chunk("00"))
@@ -353,6 +355,7 @@ class TestComplexStructures:
 
     def test_nested_containers(self):
         """Test container with nested container field."""
+
         @dataclass
         class Inner(Container):
             x: U16
@@ -362,10 +365,10 @@ class TestComplexStructures:
             a: U8
             b: Inner
 
-        obj = Outer(a=U8(42), b=Inner(x=U16(0xbeef)))
+        obj = Outer(a=U8(42), b=Inner(x=U16(0xBEEF)))
 
         encoded = ssz.encode(obj)
-        assert encoded == b'\x2a\xef\xbe'  # 42 + 0xbeef little-endian
+        assert encoded == b"\x2a\xef\xbe"  # 42 + 0xbeef little-endian
 
         htr = hash_tree_root(obj)
         # Inner HTR first
@@ -376,6 +379,7 @@ class TestComplexStructures:
 
     def test_container_with_vector(self):
         """Test container with vector field."""
+
         @dataclass
         class TestStruct(Container):
             count: U32
@@ -385,7 +389,7 @@ class TestComplexStructures:
         obj = TestStruct(count=U32(4), values=values)
 
         encoded = ssz.encode(obj)
-        assert encoded == b'\x04\x00\x00\x00\x00\x01\x02\x03'
+        assert encoded == b"\x04\x00\x00\x00\x00\x01\x02\x03"
 
         htr = hash_tree_root(obj)
         values_htr = hash_tree_root(values)
@@ -402,9 +406,9 @@ class TestRoundTrips:
             (bool, True),
             (bool, False),
             (U8, U8(42)),
-            (U16, U16(0xabcd)),
+            (U16, U16(0xABCD)),
             (U32, U32(0x12345678)),
-            (U64, U64(0x123456789abcdef0)),
+            (U64, U64(0x123456789ABCDEF0)),
         ]
 
         for typ, value in test_values:
@@ -414,6 +418,7 @@ class TestRoundTrips:
 
     def test_container_roundtrip(self):
         """Test round-trip for containers."""
+
         @dataclass
         class TestContainer(Container):
             a: U8
@@ -430,7 +435,9 @@ class TestRoundTrips:
 
     def test_bitvector_roundtrip(self):
         """Test round-trip for bitvectors."""
-        original = Bitvector([True, False, True, True, False, False, True, False], length=8)
+        original = Bitvector(
+            [True, False, True, True, False, False, True, False], length=8
+        )
         encoded = ssz.encode(original)
         decoded = Bitvector.deserialize(encoded, 8)
 

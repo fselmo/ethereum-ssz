@@ -7,6 +7,9 @@ from typing import (
     TypeVar,
     get_origin,
 )
+from typing import (
+    Union as PyUnion,
+)
 
 from ethereum_types.bytes import Bytes
 
@@ -138,7 +141,7 @@ class List(Generic[T], list):
         super().extend(values)
 
 
-def is_variable_size(type_: type[Any]) -> bool:
+def is_variable_size(type_: PyUnion[type[Any], Any]) -> bool:
     """
     Determine if a type is variable-size in SSZ.
 
@@ -147,16 +150,76 @@ def is_variable_size(type_: type[Any]) -> bool:
     - strings
     - Lists
     - Any sequence containing variable-size elements
+    - Containers with variable-size fields
     """
-    # For now, basic implementation
-    # TODO: Expand this based on actual type checking
+    # Handle Container instances directly
+    from .container import Container
+
+    if isinstance(type_, Container):
+        # A container instance is variable if any of its fields are variable
+        for field_name, field_type in type_.get_fields():
+            value = getattr(type_, field_name)
+            if value is not None:
+                if is_variable_size(
+                    value
+                    if isinstance(value, (Vector, List, Container))
+                    else type(value)
+                ):
+                    return True
+            elif is_variable_size(field_type):
+                return True
+        return False
+
+    # Handle List instances directly (variable size)
+    if isinstance(type_, List):
+        return True
+
+    # Handle Vector instances directly (ALWAYS fixed size in SSZ)
+    # Even if elements are variable, the Vector itself is fixed
+    if isinstance(type_, Vector):
+        return False
+
+    # Check for generic list origin first (list[T] syntax)
+    origin = get_origin(type_)
+    if origin is list:
+        return True
+
+    # Handle instances vs types
+    if not isinstance(type_, type):
+        # If it's an instance, get its type
+        type_ = type(type_)
+
+    # Check for basic variable types
     if type_ in (bytes, str):
         return True
-    if isinstance(type_, type) and issubclass(type_, List):
-        return True
-    origin = get_origin(type_)
-    if origin in (list, list):
-        return True
+
+    # Check for List types (class) - use try/except for non-class types
+    try:
+        if issubclass(type_, List):
+            return True
+    except TypeError:
+        pass
+
+    # Check for Vector types (class - always fixed size)
+    try:
+        if issubclass(type_, Vector):
+            return False
+    except TypeError:
+        pass
+
+    # Check for Container types with variable fields
+    from .container import Container
+
+    try:
+        if issubclass(type_, Container):
+            # A container is variable if any of its fields are variable
+            for _field_name, field_type in type_.get_fields():
+                if is_variable_size(field_type):
+                    return True
+            return False
+    except TypeError:
+        pass
+
     return False
 
 
@@ -226,12 +289,50 @@ def encode_composite(
     return Bytes(result)
 
 
-def get_fixed_size(type_: type[Any]) -> int:
+def get_fixed_size(type_: PyUnion[type[Any], Any]) -> int:
     """
     Get the fixed size of a type in bytes.
 
     Returns the size for fixed-size types, raises for variable-size types.
     """
+    # Handle Container instances first
+    from .container import Container
+
+    if isinstance(type_, Container):
+        # For Container instances, check if it's variable
+        if is_variable_size(type_):
+            raise ValueError(
+                f"Container {type_.__class__.__name__} is variable size"
+            )
+        # Calculate total size of all fixed fields
+        total_size = 0
+        for field_name, field_type in type_.get_fields():
+            value = getattr(type_, field_name)
+            if value is not None:
+                total_size += get_fixed_size(
+                    value
+                    if isinstance(value, (Vector, List, Container))
+                    else type(value)
+                )
+            else:
+                total_size += get_fixed_size(field_type)
+        return total_size
+
+    # Handle Vector instances
+    if isinstance(type_, Vector):
+        # Vectors are tricky - fixed-size from container's perspective
+        # but their actual byte size depends on whether elements are variable
+        # For now, we need to actually encode it to get the size
+        # This is inefficient but correct
+        from .ssz import encode
+
+        encoded = encode(type_)
+        return len(encoded)
+
+    # Handle List instances (they are variable size)
+    if isinstance(type_, List):
+        raise ValueError("Lists are variable size")
+
     from ethereum_types.numeric import U8, U32, U64, U256
 
     from .types import U16, U128
@@ -250,11 +351,35 @@ def get_fixed_size(type_: type[Any]) -> int:
     if type_ in size_map:
         return size_map[type_]
 
+    # Handle instances vs types
+    if not isinstance(type_, type):
+        # If it's an instance, get its type
+        type_ = type(type_)
+
     # Check for FixedBytes subclasses
     from ethereum_types.bytes import FixedBytes
 
-    if isinstance(type_, type) and issubclass(type_, FixedBytes):
+    if issubclass(type_, FixedBytes):
         # FixedBytes has a LENGTH attribute
         return type_.LENGTH
+
+    # Check for Vector types (class, not instance)
+    if isinstance(type_, type) and issubclass(type_, Vector):
+        # For Vector class without instance, we can't determine size
+        raise ValueError(
+            "Cannot determine fixed size for Vector class without instance"
+        )
+
+    # Check for Container types (class)
+    if isinstance(type_, type) and issubclass(type_, Container):
+        # Check if container is variable-size
+        if is_variable_size(type_):
+            raise ValueError(f"Container {type_.__name__} is variable size")
+        # A container is fixed-size if all its fields are fixed-size
+        # Calculate total size of all fixed fields
+        total_size = 0
+        for _field_name, field_type in type_.get_fields():
+            total_size += get_fixed_size(field_type)
+        return total_size
 
     raise ValueError(f"Cannot determine fixed size for type {type_}")

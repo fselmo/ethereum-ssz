@@ -7,6 +7,7 @@ from .container import Container
 from .exceptions import DecodingError, EncodingError
 from .merkle import hash_tree_root
 from .ssz import decode_list, decode_vector
+from .stable_container import StableContainer, create_stable_container_class
 from .types import U16, U128
 from .union import Union, create_union_class
 
@@ -22,6 +23,8 @@ __all__ = [
     "Vector",
     "List",
     "Container",
+    "StableContainer",
+    "create_stable_container_class",
     "Union",
     "create_union_class",
     "decode_vector",

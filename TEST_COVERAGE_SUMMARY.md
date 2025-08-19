@@ -1,15 +1,16 @@
 # Test Coverage Summary: ethereum-ssz vs remerkleable
 
 ## Overall Statistics
-- **Total Tests**: 214
-- **Passed**: 208 
-- **Skipped**: 2 (features not yet implemented)
+- **Total Tests**: 247
+- **Passed**: 238
+- **Failed**: 3 (bitlist edge cases)
+- **Skipped**: 2 (mixed/variable size encoding)
 - **Expected Failures**: 4 (missing operations in ethereum-types)
-- **Code Coverage**: 74%
+- **Code Coverage**: 81%
 
-## Comprehensive Test Coverage from remerkleable
+## Test Coverage Comparison with remerkleable
 
-### ✅ Fully Ported Test Categories
+### ✅ Fully Implemented and Tested Features
 
 #### 1. **Basic Types** (test_remerkleable_impl.py)
 - ✅ Boolean/bit encoding and hash tree root
@@ -69,7 +70,7 @@
 - ✅ Zero hash handling
 - ✅ Depth calculations
 
-### ⚠️ Partially Ported Test Categories
+### ⚠️ Partially Implemented Features
 
 #### 1. **Arithmetic Operations** (test_arithmetic.py)
 - ✅ Basic arithmetic (add, sub, mul, div, mod)
@@ -104,15 +105,28 @@
 - Partial reading/writing
 - Currently using bytes-based approach
 
-## Test Vectors Summary
+#### 4. **Remaining Edge Cases**
+- Some bitlist edge cases with boundary conditions
+- Mixed size element encoding in composite types
+- Variable size element encoding in vectors/lists
 
-### Exact Match with remerkleable
-All critical test vectors match exactly:
-- `Bitvector[8]("TTFTFTFF")` → `0x2b`
-- `U16(0xaabb)` → `0xbbaa` (little-endian)
-- `U32(0xdeadbeef)` → `0xefbeadde`
-- Container hash tree roots
-- Union selector encoding
+## Missing Test Vectors from remerkleable
+
+While ethereum-ssz has comprehensive coverage, approximately 37 test vectors from remerkleable (53%) are not yet ported:
+
+### Missing Complex Test Cases:
+- **ByteVector/ByteList types** - remerkleable has optimized byte array types
+- **Complex nested containers** - VarTestStruct and ComplexTestStruct variations
+- **Large union types** - Unions with 4+ type options including nested lists
+- **Long uint256 lists** - List[uint256, 128] with many elements
+- **3 sigs vector** - Vector[ByteVector[96], 3] for signature aggregation
+
+### Test Vectors Match Exactly Where Implemented:
+- `Bitvector[8]("TTFTFTFF")` → `0x2b` ✓
+- `U16(0xaabb)` → `0xbbaa` (little-endian) ✓
+- `U32(0xdeadbeef)` → `0xefbeadde` ✓
+- All container hash tree roots match ✓
+- Union selector encoding matches ✓
 
 ## Known Differences
 
@@ -145,10 +159,16 @@ All critical test vectors match exactly:
 
 ## Conclusion
 
-The ethereum-ssz library has achieved **comprehensive test coverage** matching remerkleable for all core SSZ functionality. The implementation is:
-- ✅ **Functionally complete** for SSZ serialization/deserialization
-- ✅ **Fully compatible** with exact test vectors
-- ✅ **Well-tested** with 208 passing tests
-- ✅ **Production-ready** for Ethereum SSZ operations
+The ethereum-ssz library has achieved **good test coverage** for core SSZ functionality. The implementation is:
+- ✅ **Functionally complete** for basic SSZ serialization/deserialization
+- ✅ **Compatible** where test vectors overlap with remerkleable
+- ✅ **Well-tested** with 238 passing tests
+- ✅ **Ready** for basic Ethereum SSZ operations
+- ⚠️ **Missing** ~53% of remerkleable's advanced test cases
+- ❌ **Not implemented** StableContainer feature
 
-The minor differences in arithmetic operations and type comparisons do not affect SSZ functionality and are documented with workarounds where needed.
+To achieve full 1-to-1 parity with remerkleable:
+1. Port remaining 37 test vectors
+2. Implement StableContainer
+3. Add ByteVector/ByteList optimizations
+4. Complete complex nested structure tests

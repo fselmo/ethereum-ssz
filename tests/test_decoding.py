@@ -29,33 +29,33 @@ class TestBasicDecoding:
 
     def test_decode_bool_true(self):
         """Test decoding boolean true."""
-        encoded = b'\x01'
+        encoded = b"\x01"
         decoded = ssz.decode_to(bool, encoded)
         assert decoded is True
 
     def test_decode_bool_false(self):
         """Test decoding boolean false."""
-        encoded = b'\x00'
+        encoded = b"\x00"
         decoded = ssz.decode_to(bool, encoded)
         assert decoded is False
 
     def test_decode_uint8(self):
         """Test decoding uint8."""
-        encoded = b'\x42'
+        encoded = b"\x42"
         decoded = ssz.decode_to(U8, encoded)
         assert decoded == U8(0x42)
 
     def test_decode_uint16(self):
         """Test decoding uint16 (little-endian)."""
-        encoded = b'\xbb\xaa'  # 0xaabb in little-endian
+        encoded = b"\xbb\xaa"  # 0xaabb in little-endian
         decoded = ssz.decode_to(U16, encoded)
-        assert decoded == U16(0xaabb)
+        assert decoded == U16(0xAABB)
 
     def test_decode_uint32(self):
         """Test decoding uint32 (little-endian)."""
-        encoded = b'\xef\xbe\xad\xde'  # 0xdeadbeef in little-endian
+        encoded = b"\xef\xbe\xad\xde"  # 0xdeadbeef in little-endian
         decoded = ssz.decode_to(U32, encoded)
-        assert decoded == U32(0xdeadbeef)
+        assert decoded == U32(0xDEADBEEF)
 
 
 class TestContainerDecoding:
@@ -63,6 +63,7 @@ class TestContainerDecoding:
 
     def test_decode_simple_container(self):
         """Test decoding a simple container with fixed-size fields."""
+
         @dataclass
         class SimpleContainer(Container):
             a: U8
@@ -70,7 +71,9 @@ class TestContainerDecoding:
             c: U32
 
         # Encode a container
-        original = SimpleContainer(a=U8(0x11), b=U16(0x2233), c=U32(0x44556677))
+        original = SimpleContainer(
+            a=U8(0x11), b=U16(0x2233), c=U32(0x44556677)
+        )
         encoded = ssz.encode(original)
 
         # Decode it back
@@ -101,7 +104,9 @@ class TestVectorDecoding:
 
     def test_decode_bool_vector(self):
         """Test decoding a vector of booleans."""
-        original = Vector([True, False, True, True], length=4, element_type=bool)
+        original = Vector(
+            [True, False, True, True], length=4, element_type=bool
+        )
         encoded = ssz.encode(original)
 
         decoded = decode_vector(encoded, bool, 4)
@@ -119,7 +124,9 @@ class TestListDecoding:
     def test_decode_uint32_list(self):
         """Test decoding a list of uint32s."""
         # Create and encode a list
-        original = SSZList([U32(10), U32(20), U32(30)], max_length=10, element_type=U32)
+        original = SSZList(
+            [U32(10), U32(20), U32(30)], max_length=10, element_type=U32
+        )
         encoded = ssz.encode(original)
 
         # Decode it back
@@ -180,6 +187,7 @@ class TestRoundTrip:
 
     def test_complex_container_roundtrip(self):
         """Test round-trip of a complex container."""
+
         @dataclass
         class ComplexContainer(Container):
             count: U32
@@ -187,12 +195,10 @@ class TestRoundTrip:
             flag: bool
 
         # Create a complex object
-        values_vec = Vector([U8(i) for i in range(5)], length=5, element_type=U8)
-        original = ComplexContainer(
-            count=U32(5),
-            values=values_vec,
-            flag=True
+        values_vec = Vector(
+            [U8(i) for i in range(5)], length=5, element_type=U8
         )
+        original = ComplexContainer(count=U32(5), values=values_vec, flag=True)
 
         # Encode and decode
         encoded = ssz.encode(original)

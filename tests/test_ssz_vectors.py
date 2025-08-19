@@ -28,7 +28,7 @@ def chunk(data: bytes) -> bytes:
     """Pad data to 32 bytes."""
     if len(data) >= 32:
         return data[:32]
-    return data + b'\x00' * (32 - len(data))
+    return data + b"\x00" * (32 - len(data))
 
 
 class TestBasicTypes:
@@ -37,99 +37,99 @@ class TestBasicTypes:
     def test_bool_false(self):
         """Test boolean false encoding."""
         encoded = ssz.encode(False)
-        assert encoded == b'\x00'
+        assert encoded == b"\x00"
 
         htr = hash_tree_root(False)
-        assert htr == Bytes32(b'\x00' * 32)
+        assert htr == Bytes32(b"\x00" * 32)
 
     def test_bool_true(self):
         """Test boolean true encoding."""
         encoded = ssz.encode(True)
-        assert encoded == b'\x01'
+        assert encoded == b"\x01"
 
         htr = hash_tree_root(True)
-        assert htr == Bytes32(b'\x01' + b'\x00' * 31)
+        assert htr == Bytes32(b"\x01" + b"\x00" * 31)
 
     def test_uint8_00(self):
         """Test uint8(0x00) encoding."""
         value = U8(0x00)
         encoded = ssz.encode(value)
-        assert encoded == b'\x00'
+        assert encoded == b"\x00"
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x00'))
+        assert htr == Bytes32(chunk(b"\x00"))
 
     def test_uint8_01(self):
         """Test uint8(0x01) encoding."""
         value = U8(0x01)
         encoded = ssz.encode(value)
-        assert encoded == b'\x01'
+        assert encoded == b"\x01"
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x01'))
+        assert htr == Bytes32(chunk(b"\x01"))
 
     def test_uint8_ab(self):
         """Test uint8(0xab) encoding."""
-        value = U8(0xab)
+        value = U8(0xAB)
         encoded = ssz.encode(value)
-        assert encoded == b'\xab'
+        assert encoded == b"\xab"
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\xab'))
+        assert htr == Bytes32(chunk(b"\xab"))
 
     def test_uint16_0000(self):
         """Test uint16(0x0000) encoding."""
         value = U16(0x0000)
         encoded = ssz.encode(value)
-        assert encoded == b'\x00\x00'
+        assert encoded == b"\x00\x00"
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x00\x00'))
+        assert htr == Bytes32(chunk(b"\x00\x00"))
 
     def test_uint16_abcd(self):
         """Test uint16(0xabcd) encoding - little endian."""
-        value = U16(0xabcd)
+        value = U16(0xABCD)
         encoded = ssz.encode(value)
-        assert encoded == b'\xcd\xab'  # Little-endian
+        assert encoded == b"\xcd\xab"  # Little-endian
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\xcd\xab'))
+        assert htr == Bytes32(chunk(b"\xcd\xab"))
 
     def test_uint32_00000000(self):
         """Test uint32(0x00000000) encoding."""
         value = U32(0x00000000)
         encoded = ssz.encode(value)
-        assert encoded == b'\x00\x00\x00\x00'
+        assert encoded == b"\x00\x00\x00\x00"
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x00\x00\x00\x00'))
+        assert htr == Bytes32(chunk(b"\x00\x00\x00\x00"))
 
     def test_uint32_01234567(self):
         """Test uint32(0x01234567) encoding - little endian."""
         value = U32(0x01234567)
         encoded = ssz.encode(value)
-        assert encoded == b'\x67\x45\x23\x01'  # Little-endian
+        assert encoded == b"\x67\x45\x23\x01"  # Little-endian
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x67\x45\x23\x01'))
+        assert htr == Bytes32(chunk(b"\x67\x45\x23\x01"))
 
     def test_uint64_0000000000000000(self):
         """Test uint64(0) encoding."""
         value = U64(0x0000000000000000)
         encoded = ssz.encode(value)
-        assert encoded == b'\x00' * 8
+        assert encoded == b"\x00" * 8
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\x00' * 8))
+        assert htr == Bytes32(chunk(b"\x00" * 8))
 
     def test_uint64_0123456789abcdef(self):
         """Test uint64(0x0123456789abcdef) encoding - little endian."""
-        value = U64(0x0123456789abcdef)
+        value = U64(0x0123456789ABCDEF)
         encoded = ssz.encode(value)
-        assert encoded == b'\xef\xcd\xab\x89\x67\x45\x23\x01'  # Little-endian
+        assert encoded == b"\xef\xcd\xab\x89\x67\x45\x23\x01"  # Little-endian
 
         htr = hash_tree_root(value)
-        assert htr == Bytes32(chunk(b'\xef\xcd\xab\x89\x67\x45\x23\x01'))
+        assert htr == Bytes32(chunk(b"\xef\xcd\xab\x89\x67\x45\x23\x01"))
 
 
 class TestVectors:
@@ -140,7 +140,7 @@ class TestVectors:
         vec = Vector([U16(0x4567), U16(0x0123)], length=2, element_type=U16)
         encoded = ssz.encode(vec)
         # Little-endian encoding of each element
-        assert encoded == b'\x67\x45\x23\x01'
+        assert encoded == b"\x67\x45\x23\x01"
 
         # For vectors, merkle root is different
         htr = hash_tree_root(vec)
@@ -165,9 +165,11 @@ class TestVectors:
         sig_test_data[0] = 1
         sig_test_data[32] = 2
         sig_test_data[64] = 3
-        sig_test_data[95] = 0xff
+        sig_test_data[95] = 0xFF
 
-        vec = Vector([U8(x) for x in sig_test_data], length=96, element_type=U8)
+        vec = Vector(
+            [U8(x) for x in sig_test_data], length=96, element_type=U8
+        )
         encoded = ssz.encode(vec)
 
         expected = bytes(sig_test_data)
@@ -184,7 +186,7 @@ class TestLists:
         """Test empty List[byte, 10] encoding."""
         lst = SSZList([], max_length=10, element_type=U8)
         encoded = ssz.encode(lst)
-        assert encoded == b''
+        assert encoded == b""
 
         htr = hash_tree_root(lst)
         assert isinstance(htr, Bytes32)
@@ -193,7 +195,7 @@ class TestLists:
         """Test empty List[byte, 2048] encoding."""
         lst = SSZList([], max_length=2048, element_type=U8)
         encoded = ssz.encode(lst)
-        assert encoded == b''
+        assert encoded == b""
 
         htr = hash_tree_root(lst)
         assert isinstance(htr, Bytes32)
@@ -209,7 +211,9 @@ class TestLists:
 
     def test_list_byte_50(self):
         """Test List[byte, 50] with 50 elements."""
-        lst = SSZList([U8(i) for i in range(50)], max_length=50, element_type=U8)
+        lst = SSZList(
+            [U8(i) for i in range(50)], max_length=50, element_type=U8
+        )
         encoded = ssz.encode(lst)
         assert encoded == bytes(range(50))
 
@@ -218,7 +222,9 @@ class TestLists:
 
     def test_list_byte_6_of_256(self):
         """Test List[byte, 256] with only 6 elements."""
-        lst = SSZList([U8(i) for i in range(6)], max_length=256, element_type=U8)
+        lst = SSZList(
+            [U8(i) for i in range(6)], max_length=256, element_type=U8
+        )
         encoded = ssz.encode(lst)
         assert encoded == bytes(range(6))
 
@@ -227,10 +233,12 @@ class TestLists:
 
     def test_list_uint16_variable(self):
         """Test List[uint16, 1024] with a few elements."""
-        lst = SSZList([U16(1), U16(2), U16(3)], max_length=1024, element_type=U16)
+        lst = SSZList(
+            [U16(1), U16(2), U16(3)], max_length=1024, element_type=U16
+        )
         encoded = ssz.encode(lst)
         # Little-endian encoding of each uint16
-        assert encoded == b'\x01\x00\x02\x00\x03\x00'
+        assert encoded == b"\x01\x00\x02\x00\x03\x00"
 
         htr = hash_tree_root(lst)
         assert isinstance(htr, Bytes32)
@@ -247,7 +255,7 @@ class TestComplexStructures:
         outer = Vector([inner1, inner2], length=2, element_type=Vector)
 
         encoded = ssz.encode(outer)
-        assert encoded == b'\x01\x02\x03\x04\x05\x06'
+        assert encoded == b"\x01\x02\x03\x04\x05\x06"
 
         htr = hash_tree_root(outer)
         assert isinstance(htr, Bytes32)
@@ -260,7 +268,7 @@ class TestComplexStructures:
 
         encoded = ssz.encode(lst)
         # Little-endian uint16s
-        assert encoded == b'\x01\x00\x02\x00\x03\x00\x04\x00'
+        assert encoded == b"\x01\x00\x02\x00\x03\x00\x04\x00"
 
         htr = hash_tree_root(lst)
         assert isinstance(htr, Bytes32)

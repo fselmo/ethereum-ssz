@@ -14,90 +14,88 @@ def test_hash_tree_root_bool() -> None:
     """Test hash tree root of booleans."""
     # False should be 0x00 followed by 31 zero bytes
     htr_false = hash_tree_root(False)
-    assert htr_false == Bytes32(b'\x00' * 32)
+    assert htr_false == Bytes32(b"\x00" * 32)
 
     # True should be 0x01 followed by 31 zero bytes
     htr_true = hash_tree_root(True)
-    assert htr_true == Bytes32(b'\x01' + b'\x00' * 31)
+    assert htr_true == Bytes32(b"\x01" + b"\x00" * 31)
 
 
 def test_hash_tree_root_uint8() -> None:
     """Test hash tree root of U8."""
     # U8(0) should be all zeros
-    assert hash_tree_root(U8(0)) == Bytes32(b'\x00' * 32)
+    assert hash_tree_root(U8(0)) == Bytes32(b"\x00" * 32)
 
     # U8(1) should be 0x01 followed by zeros
-    assert hash_tree_root(U8(1)) == Bytes32(b'\x01' + b'\x00' * 31)
+    assert hash_tree_root(U8(1)) == Bytes32(b"\x01" + b"\x00" * 31)
 
     # U8(255) should be 0xFF followed by zeros
-    assert hash_tree_root(U8(255)) == Bytes32(b'\xFF' + b'\x00' * 31)
+    assert hash_tree_root(U8(255)) == Bytes32(b"\xff" + b"\x00" * 31)
 
 
 def test_hash_tree_root_uint32() -> None:
     """Test hash tree root of U32."""
     # U32(0) should be all zeros
-    assert hash_tree_root(U32(0)) == Bytes32(b'\x00' * 32)
+    assert hash_tree_root(U32(0)) == Bytes32(b"\x00" * 32)
 
     # U32(1) should be 0x01 followed by zeros (little-endian)
-    assert hash_tree_root(U32(1)) == Bytes32(b'\x01' + b'\x00' * 31)
+    assert hash_tree_root(U32(1)) == Bytes32(b"\x01" + b"\x00" * 31)
 
     # U32(0x12345678) should be little-endian
-    expected = Bytes32(b'\x78\x56\x34\x12' + b'\x00' * 28)
+    expected = Bytes32(b"\x78\x56\x34\x12" + b"\x00" * 28)
     assert hash_tree_root(U32(0x12345678)) == expected
 
 
 def test_hash_tree_root_uint64() -> None:
     """Test hash tree root of U64."""
     # U64(0) should be all zeros
-    assert hash_tree_root(U64(0)) == Bytes32(b'\x00' * 32)
+    assert hash_tree_root(U64(0)) == Bytes32(b"\x00" * 32)
 
     # U64(1) should be 0x01 followed by zeros
-    assert hash_tree_root(U64(1)) == Bytes32(b'\x01' + b'\x00' * 31)
+    assert hash_tree_root(U64(1)) == Bytes32(b"\x01" + b"\x00" * 31)
 
     # U64 with specific value
     value = U64(0x0123456789ABCDEF)
-    expected = Bytes32(
-        b'\xEF\xCD\xAB\x89\x67\x45\x23\x01' + b'\x00' * 24
-    )
+    expected = Bytes32(b"\xef\xcd\xab\x89\x67\x45\x23\x01" + b"\x00" * 24)
     assert hash_tree_root(value) == expected
 
 
 def test_hash_tree_root_uint256() -> None:
     """Test hash tree root of U256."""
     # U256(0) should be all zeros
-    assert hash_tree_root(U256(0)) == Bytes32(b'\x00' * 32)
+    assert hash_tree_root(U256(0)) == Bytes32(b"\x00" * 32)
 
     # U256(1) should be 0x01 followed by zeros
-    assert hash_tree_root(U256(1)) == Bytes32(b'\x01' + b'\x00' * 31)
+    assert hash_tree_root(U256(1)) == Bytes32(b"\x01" + b"\x00" * 31)
 
     # U256 max value should be all 0xFF
     max_u256 = U256(2**256 - 1)
-    assert hash_tree_root(max_u256) == Bytes32(b'\xFF' * 32)
+    assert hash_tree_root(max_u256) == Bytes32(b"\xff" * 32)
 
 
 def test_hash_tree_root_bytes() -> None:
     """Test hash tree root of bytes."""
     # Empty bytes
-    assert hash_tree_root(b'') == Bytes32(b'\x00' * 32)
+    assert hash_tree_root(b"") == Bytes32(b"\x00" * 32)
 
     # Small bytes (< 32)
-    data = b'hello'
-    expected = Bytes32(data + b'\x00' * (32 - len(data)))
+    data = b"hello"
+    expected = Bytes32(data + b"\x00" * (32 - len(data)))
     assert hash_tree_root(data) == expected
 
     # Exactly 32 bytes
-    data32 = b'\x01' * 32
+    data32 = b"\x01" * 32
     assert hash_tree_root(data32) == Bytes32(data32)
 
 
 def test_hash_tree_root_bytes32() -> None:
     """Test hash tree root of Bytes32."""
     # Zero Bytes32
-    zero = Bytes32(b'\x00' * 32)
+    zero = Bytes32(b"\x00" * 32)
     assert hash_tree_root(zero) == zero
 
     # Non-zero Bytes32
-    data = Bytes32(b'\xFF' * 32)
+    data = Bytes32(b"\xff" * 32)
     assert hash_tree_root(data) == data
 
 

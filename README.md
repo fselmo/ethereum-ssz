@@ -52,6 +52,67 @@ lst.append(U64(300))  # Can append up to max_length
 encoded = ssz.encode(lst)
 ```
 
+### Containers
+
+```python
+from ethereum_ssz.container import Container
+from ethereum_types.numeric import U64
+from ethereum_types.bytes import Bytes32
+
+class MyContainer(Container):
+    _fields = {
+        'count': U64,
+        'hash': Bytes32,
+        'active': bool
+    }
+
+# Create and encode a container
+container = MyContainer(count=U64(100), hash=Bytes32(b'\x00' * 32), active=True)
+encoded = ssz.encode(container)
+
+# Decode back to container
+decoded = ssz.decode_to(MyContainer, encoded)
+assert decoded.count == U64(100)
+```
+
+### Bitfields
+
+```python
+from ethereum_ssz.bitfields import Bitvector, Bitlist
+
+# Fixed-size bitvector
+bits = Bitvector(size=8)
+bits[0] = True
+bits[2] = True
+encoded = ssz.encode(bits)  # Encodes as compact byte representation
+
+# Variable-size bitlist
+bitlist = Bitlist(max_length=256)
+bitlist.append(True)
+bitlist.append(False)
+bitlist.append(True)
+encoded = ssz.encode(bitlist)  # Includes length information
+```
+
+### Unions
+
+```python
+from ethereum_ssz.union import Union
+from ethereum_types.numeric import U32, U64
+
+# Define a union type
+MyUnion = Union[None, U32, U64]
+
+# Create union with U32 value
+union_val = MyUnion(U32(42))
+encoded = ssz.encode(union_val)  # Includes selector byte
+
+# Decode back
+decoded = ssz.decode_to(MyUnion, encoded)
+assert decoded.value == U32(42)
+assert decoded.selector == 1  # Index of U32 in the union
+```
+
 ### Merkleization (hash_tree_root)
 
 ```python
@@ -67,6 +128,10 @@ print(htr.hex())  # Merkle root as hex
 vec = Vector([U64(1), U64(2), U64(3), U64(4)], length=4, element_type=U64)
 htr = hash_tree_root(vec)
 print(htr.hex())  # Merkle root of the vector
+
+# Containers also support hash_tree_root
+container_htr = hash_tree_root(container)
+print(container_htr.hex())  # Merkle root of all fields
 ```
 
 ## Features
@@ -77,10 +142,13 @@ print(htr.hex())  # Merkle root of the vector
 - ✅ Fixed-length vectors (Vector)
 - ✅ Variable-length lists with max length (List)
 - ✅ Merkleization support (hash_tree_root)
-- 🚧 Containers (struct-like composites) - Coming soon
-- 🚧 Pydantic model support - Coming soon
-- 🚧 Offset encoding for variable-size elements - Coming soon
-- 🚧 Decoding for composite types - Coming soon
+- ✅ Containers (struct-like composites)
+- ✅ Unions (sum types with selector)
+- ✅ Bitfields (Bitvector and Bitlist)
+- ✅ Offset encoding for variable-size elements
+- ✅ Full decoding support for all types (basic and composite)
+- 🚧 StableContainer - Not yet implemented
+- 🚧 Navigation paths - Not yet implemented
 
 ## Development
 

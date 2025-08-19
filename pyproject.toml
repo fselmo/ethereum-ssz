@@ -65,6 +65,12 @@ packages = ["src/ethereum_ssz"]
 
 [tool.ruff]
 line-length = 79
+exclude = [
+    "debug_*.py",
+    "htmlcov/**",
+    ".tox/**",
+    "*.egg-info/**",
+]
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -99,6 +105,11 @@ known-first-party = ["ethereum_ssz"]
 "tests/**" = [
     "D",      # Don't require docstrings in tests
     "F401",   # Allow unused imports in tests
+    "N802",   # Allow non-lowercase function names in tests (for test names)
+    "N806",   # Allow non-lowercase variables in tests
+    "B017",   # Allow assert-raises-exception in tests
+    "E501",   # Allow long lines in tests
+    "UP035",  # Allow deprecated typing imports (for compatibility)
 ]
 
 [tool.mypy]
