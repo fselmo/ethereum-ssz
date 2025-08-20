@@ -2,8 +2,8 @@
 
 from collections.abc import Sequence
 from typing import (
+    Any,
     Protocol,
-    TypeAlias,
     TypeVar,
     runtime_checkable,
 )
@@ -13,6 +13,7 @@ from typing import (
 
 from ethereum_types.bytes import Bytes, FixedBytes
 from ethereum_types.numeric import FixedUnsigned, Uint
+from typing_extensions import TypeAlias
 
 from .bitfields import Bitlist, Bitvector
 from .composite import List as SSZList
@@ -26,9 +27,9 @@ BYTES_PER_LENGTH_OFFSET = 4
 BITS_PER_BYTE = 8
 
 # Type aliases similar to ethereum-rlp
-Simple: TypeAlias = PyUnion[Sequence["Simple"], bytes]
+Simple: TypeAlias = PyUnion["Sequence[Simple]", bytes]
 Extended: TypeAlias = PyUnion[
-    Sequence["Extended"], bytearray, bytes, Uint, FixedUnsigned, str, bool
+    "Sequence[Extended]", bytearray, bytes, Uint, FixedUnsigned, str, bool
 ]
 
 
@@ -153,7 +154,7 @@ def encode_container(container: Container) -> Bytes:
     return Bytes(container.serialize())
 
 
-def encode_vector(vector: Vector) -> Bytes:
+def encode_vector(vector: Vector[Any]) -> Bytes:
     """
     Encodes a fixed-length vector using SSZ.
 
@@ -167,7 +168,7 @@ def encode_vector(vector: Vector) -> Bytes:
     return encode_composite(vector, element_types, variable_sizes)
 
 
-def encode_list(ssz_list: SSZList) -> Bytes:
+def encode_list(ssz_list: SSZList[Any]) -> Bytes:
     """
     Encodes a variable-length list using SSZ.
 
@@ -240,7 +241,7 @@ def decode_to(cls: type[U], encoded_data: Bytes) -> U:
         elif issubclass(cls, (bytes, Bytes, FixedBytes)):
             return decode_bytes_to(cls, encoded_data)  # type: ignore
         elif issubclass(cls, Container):
-            return decode_container(cls, encoded_data)  # type: ignore
+            return decode_container(cls, encoded_data)
         elif issubclass(cls, Vector):
             # Need more context for Vector (element type, length)
             raise NotImplementedError(
@@ -252,7 +253,7 @@ def decode_to(cls: type[U], encoded_data: Bytes) -> U:
                 "List decoding requires element_type and max_length parameters"
             )
         elif issubclass(cls, (Bitvector, Bitlist)):
-            return cls.deserialize(encoded_data)  # type: ignore
+            return cls.deserialize(encoded_data)
         elif issubclass(cls, Union):
             # Need more context for Union (types)
             raise NotImplementedError(
@@ -331,8 +332,8 @@ def decode_container(cls: type[Container], encoded_data: Bytes) -> Container:
 
     # Parse offsets for variable-size fields
     pos = 0
-    field_values = {}
-    variable_offsets = []
+    field_values: dict[str, Any] = {}
+    variable_offsets: list[tuple[str, type, int]] = []
 
     # First pass: read fixed fields and offsets
     for field_name, field_type in field_list:
@@ -376,7 +377,7 @@ def decode_container(cls: type[Container], encoded_data: Bytes) -> Container:
 
 def decode_vector(
     encoded_data: Bytes, element_type: type, length: int
-) -> Vector:
+) -> Vector[Any]:
     """
     Decode a Vector from SSZ bytes.
 
@@ -390,7 +391,7 @@ def decode_vector(
     """
     from .composite import get_fixed_size, is_variable_size
 
-    elements = []
+    elements: list[Any] = []
 
     if not is_variable_size(element_type):
         # Fixed-size elements - simple division
@@ -441,7 +442,7 @@ def decode_vector(
 
 def decode_list(
     encoded_data: Bytes, element_type: type, max_length: int
-) -> SSZList:
+) -> SSZList[Any]:
     """
     Decode a List from SSZ bytes.
 
@@ -458,7 +459,7 @@ def decode_list(
     if len(encoded_data) == 0:
         return SSZList([], max_length, element_type)
 
-    elements = []
+    elements: list[Any] = []
 
     if not is_variable_size(element_type):
         # Fixed-size elements - simple division

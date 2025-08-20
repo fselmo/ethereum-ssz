@@ -6,6 +6,7 @@ Containers are heterogeneous collections of named fields.
 
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Any, get_type_hints
+from typing import Union as PyUnion
 
 from ethereum_types.bytes import Bytes32
 
@@ -18,7 +19,7 @@ class Container:
     They should be defined as dataclasses with type annotations.
     """
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         """Automatically make subclasses into dataclasses."""
         super().__init_subclass__(**kwargs)
         # Only apply dataclass if not already applied
@@ -46,9 +47,9 @@ class Container:
         field_list = self.get_fields()
 
         # Prepare data for composite encoding
-        elements = []
-        element_types = []
-        variable_sizes = []
+        elements: list[Any] = []
+        element_types: list[PyUnion[type[Any], Any]] = []
+        variable_sizes: list[bool] = []
 
         for field_name, field_type in field_list:
             value = getattr(self, field_name)
@@ -80,7 +81,7 @@ class Container:
         # Merkleize the field roots
         return merkleize(roots)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Check equality based on field values."""
         if not isinstance(other, self.__class__):
             return False
@@ -91,7 +92,7 @@ class Container:
 
         return True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation of the container."""
         field_strs = []
         for field_name, _ in self.get_fields():

@@ -20,7 +20,7 @@ T = TypeVar("T")
 BYTES_PER_LENGTH_OFFSET = 4
 
 
-class Vector(Generic[T], list):
+class Vector(Generic[T], list[T]):
     """
     Fixed-length homogeneous collection.
 
@@ -50,7 +50,7 @@ class Vector(Generic[T], list):
         self.length = length
         self.element_type = element_type
 
-    def __setitem__(self, key: int, value: T) -> None:
+    def __setitem__(self, key: int, value: T) -> None:  # type: ignore[override]
         """Override to maintain type safety."""
         if not isinstance(value, self.element_type):
             raise TypeError(
@@ -62,11 +62,11 @@ class Vector(Generic[T], list):
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot append to fixed-length Vector")
 
-    def extend(self, values: Sequence[T]) -> None:
+    def extend(self, values: Sequence[T]) -> None:  # type: ignore[override]
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot extend fixed-length Vector")
 
-    def pop(self, index: int = -1) -> T:
+    def pop(self, index: int = -1) -> T:  # type: ignore[override]
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot pop from fixed-length Vector")
 
@@ -75,7 +75,7 @@ class Vector(Generic[T], list):
         raise NotImplementedError("Cannot remove from fixed-length Vector")
 
 
-class List(Generic[T], list):
+class List(Generic[T], list[T]):
     """
     Variable-length homogeneous collection with a maximum length.
 
@@ -105,7 +105,7 @@ class List(Generic[T], list):
         self.max_length = max_length
         self.element_type = element_type
 
-    def __setitem__(self, key: int, value: T) -> None:
+    def __setitem__(self, key: int, value: T) -> None:  # type: ignore[override]
         """Override to maintain type safety."""
         if not isinstance(value, self.element_type):
             raise TypeError(
@@ -125,7 +125,7 @@ class List(Generic[T], list):
             )
         super().append(value)
 
-    def extend(self, values: Sequence[T]) -> None:
+    def extend(self, values: Sequence[T]) -> None:  # type: ignore[override]
         """Extend with length check."""
         new_length = len(self) + len(values)
         if new_length > self.max_length:
@@ -225,7 +225,7 @@ def is_variable_size(type_: PyUnion[type[Any], Any]) -> bool:
 
 def encode_composite(
     elements: Sequence[Any],
-    element_types: Sequence[type[Any]],
+    element_types: Sequence[PyUnion[type[Any], Any]],
     variable_sizes: Sequence[bool],
 ) -> Bytes:
     """

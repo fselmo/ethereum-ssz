@@ -2,7 +2,7 @@
 
 import hashlib
 from collections.abc import Sequence
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from ethereum_types.bytes import Bytes, Bytes32, FixedBytes
 from ethereum_types.numeric import U8, U32, U64, U256, FixedUnsigned, Uint
@@ -114,7 +114,7 @@ def hash_tree_root_bytes(value: Union[bytes, Bytes, FixedBytes]) -> Bytes32:
         return merkleize(chunks)
 
 
-def hash_tree_root_vector(vector: Vector) -> Bytes32:
+def hash_tree_root_vector(vector: Vector[Any]) -> Bytes32:
     """
     Hash tree root of a fixed-length vector.
 
@@ -137,7 +137,7 @@ def hash_tree_root_vector(vector: Vector) -> Bytes32:
         return merkleize(roots)
 
 
-def hash_tree_root_list(ssz_list: SSZList) -> Bytes32:
+def hash_tree_root_list(ssz_list: SSZList[Any]) -> Bytes32:
     """
     Hash tree root of a variable-length list.
 
@@ -178,7 +178,9 @@ def pack_bytes(data: bytes) -> list[Bytes32]:
     return chunks
 
 
-def merkleize(chunks: Sequence[Bytes32], limit: int = None) -> Bytes32:
+def merkleize(
+    chunks: Sequence[Bytes32], limit: Optional[int] = None
+) -> Bytes32:
     """
     Merkleize a sequence of chunks.
 
@@ -293,7 +295,7 @@ def get_basic_type_size(type_: type) -> int:
         raise ValueError(f"Unknown basic type size for {type_}")
 
 
-def pack_vector_to_chunks(vector: Vector) -> list[Bytes32]:
+def pack_vector_to_chunks(vector: Vector[Any]) -> list[Bytes32]:
     """
     Pack a vector of basic types into 32-byte chunks.
 
@@ -389,7 +391,7 @@ def hash_tree_root_bitlist(bitlist) -> Bytes32:
     return hash(contents_root + length_bytes)
 
 
-def pack_list_to_chunks(ssz_list: SSZList) -> list[Bytes32]:
+def pack_list_to_chunks(ssz_list: SSZList[Any]) -> list[Bytes32]:
     """
     Pack a list of basic types into 32-byte chunks.
 
