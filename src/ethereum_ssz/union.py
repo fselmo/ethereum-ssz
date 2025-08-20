@@ -6,10 +6,11 @@ Unions are tagged with a selector to indicate which type is active.
 
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from ethereum_types.bytes import Bytes32
 
 
-class Union:
+class Union(BaseModel):
     """
     SSZ Union type - can hold one value of several possible types.
 
@@ -17,38 +18,40 @@ class Union:
     - A selector (uint8) indicating which type is active (0-indexed)
     - A value of that type (or None for null variant)
     """
-
-    def __init__(self, types: list[type], selector: int, value: Any):
-        """
-        Initialize a Union.
-
-        Args:
-            types: List of allowed types (None for null variant)
-            selector: Index of the active type
-            value: The value (must match types[selector])
-        """
-        if selector < 0 or selector >= len(types):
-            raise ValueError(
-                f"Invalid selector {selector} for Union with "
-                f"{len(types)} types"
-            )
-
-        self.types = types
-        self.selector = selector
-        self.value = value
-
-        # Validate value matches selected type
-        expected_type = types[selector]
-        if expected_type is None:
-            if value is not None:
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
+    types: list[type]
+    selector: int
+    value: Any
+    
+    @field_validator('selector')
+    @classmethod
+    def validate_selector(cls, v: int, info) -> int:
+        """Validate selector is within valid range."""
+        if 'types' in info.data:
+            types = info.data['types']
+            if v < 0 or v >= len(types):
                 raise ValueError(
-                    f"Selector {selector} expects None, got {type(value)}"
+                    f"Invalid selector {v} for Union with {len(types)} types"
                 )
-        elif value is None:
+        return v
+    
+    @model_validator(mode='after')
+    def validate_value_matches_type(self) -> 'Union':
+        """Validate that value matches the selected type."""
+        expected_type = self.types[self.selector]
+        if expected_type is None:
+            if self.value is not None:
+                raise ValueError(
+                    f"Selector {self.selector} expects None, got {type(self.value)}"
+                )
+        elif self.value is None:
             raise ValueError(
-                f"Selector {selector} expects {expected_type}, got None"
+                f"Selector {self.selector} expects {expected_type}, got None"
             )
         # For now, skip strict type checking of value
+        return self
 
     def __eq__(self, other: Any) -> bool:
         """Check equality."""
@@ -114,12 +117,13 @@ def create_union_class(name: str, types: list[type]) -> type[Union]:
 
     Example:
         MyUnion = create_union_class("MyUnion", [uint16, uint32, None])
-        u = MyUnion(selector=0, value=uint16(42))
+        u = MyUnion(types=[uint16, uint32, None], selector=0, value=uint16(42))
     """
 
     class SpecificUnion(Union):
-        def __init__(self, selector: int, value: Any):
-            super().__init__(types, selector, value)
+        def __init__(self, selector: int, value: Any, **kwargs):
+            # Always pass the types list
+            super().__init__(types=types, selector=selector, value=value, **kwargs)
 
         def __repr__(self) -> str:
             type_names = []
@@ -135,4 +139,5 @@ def create_union_class(name: str, types: list[type]) -> type[Union]:
                 f"value={self.value!r})"
             )
 
+    SpecificUnion.__name__ = name
     return SpecificUnion

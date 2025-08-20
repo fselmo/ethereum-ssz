@@ -4,7 +4,7 @@ Tests to improve code coverage by hitting uncovered lines.
 This file specifically targets lines that aren't covered by other tests.
 """
 
-from dataclasses import dataclass
+
 from typing import List as PyList
 
 import pytest
@@ -153,23 +153,18 @@ class TestContainerEdgeCases:
     def test_container_fallback_type_hints(self):
         """Test container using type hints instead of dataclass fields."""
 
-        # This tests line 37 in container.py
+        # With Pydantic, containers use type hints directly
         class SimpleContainer(Container):
             a: U8
             b: U16
 
-            def __init__(self, a: U8, b: U16):
-                self.a = a
-                self.b = b
-
-        obj = SimpleContainer(U8(1), U16(2))
+        obj = SimpleContainer(a=U8(1), b=U16(2))
         fields = obj.get_fields()
         assert len(fields) >= 2  # Should have at least a and b
 
     def test_container_repr(self):
         """Test container __repr__ method."""
 
-        @dataclass
         class TestContainer(Container):
             x: U32
             y: U8
@@ -252,7 +247,6 @@ class TestSSZEdgeCases:
     def test_decode_container_errors(self):
         """Test container decoding error cases."""
 
-        @dataclass
         class TestContainer(Container):
             a: U8
             b: U16
@@ -442,7 +436,6 @@ class TestOffsetHandling:
 
         # This tests lines 200-229 in composite.py
         # Create a composite with variable-size elements
-        @dataclass
         class VarContainer(Container):
             a: U8
             b: SSZList  # Variable size
@@ -470,7 +463,6 @@ class TestContainerVariableFields:
         """Test container serialize with variable fields."""
 
         # This tests lines 75-82 in container.py (currently not reached)
-        @dataclass
         class MixedContainer(Container):
             fixed1: U32
             var1: SSZList

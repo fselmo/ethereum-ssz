@@ -133,7 +133,7 @@ def hash_tree_root_vector(vector: Vector[Any]) -> Bytes32:
             return merkleize(chunks)
     else:
         # Complex type - merkleize each element separately
-        roots = [hash_tree_root(elem) for elem in vector]
+        roots = [hash_tree_root(elem) for elem in vector.elements]
         return merkleize(roots)
 
 
@@ -159,11 +159,11 @@ def hash_tree_root_list(ssz_list: SSZList[Any]) -> Bytes32:
         elements_root = merkleize(chunks, limit=max_chunks)
     else:
         # Complex type - merkleize each element separately
-        roots = [hash_tree_root(elem) for elem in ssz_list]
+        roots = [hash_tree_root(elem) for elem in ssz_list.elements]
         elements_root = merkleize(roots, limit=ssz_list.max_length)
 
     # Mix in the length
-    length_bytes = len(ssz_list).to_bytes(32, byteorder="little")
+    length_bytes = len(ssz_list.elements).to_bytes(32, byteorder="little")
     return hash(elements_root + length_bytes)
 
 
@@ -308,12 +308,12 @@ def pack_vector_to_chunks(vector: Vector[Any]) -> list[Bytes32]:
 
     chunks = []
 
-    # Group elements into chunks
-    for i in range(0, len(vector), elems_per_chunk):
+    # Group elements into chunks (use .elements for Pydantic)
+    for i in range(0, len(vector.elements), elems_per_chunk):
         chunk_data = b""
         for j in range(elems_per_chunk):
-            if i + j < len(vector):
-                elem = vector[i + j]
+            if i + j < len(vector.elements):
+                elem = vector.elements[i + j]
                 # Convert to little-endian bytes
                 if isinstance(elem, bool):
                     chunk_data += b"\x01" if elem else b"\x00"
@@ -397,7 +397,7 @@ def pack_list_to_chunks(ssz_list: SSZList[Any]) -> list[Bytes32]:
 
     Similar to pack_vector_to_chunks but for lists.
     """
-    if len(ssz_list) == 0:
+    if len(ssz_list.elements) == 0:
         return []
 
     elem_type = ssz_list.element_type
@@ -406,12 +406,12 @@ def pack_list_to_chunks(ssz_list: SSZList[Any]) -> list[Bytes32]:
 
     chunks = []
 
-    # Group elements into chunks
-    for i in range(0, len(ssz_list), elems_per_chunk):
+    # Group elements into chunks (use .elements for Pydantic)
+    for i in range(0, len(ssz_list.elements), elems_per_chunk):
         chunk_data = b""
         for j in range(elems_per_chunk):
-            if i + j < len(ssz_list):
-                elem = ssz_list[i + j]
+            if i + j < len(ssz_list.elements):
+                elem = ssz_list.elements[i + j]
                 # Convert to little-endian bytes
                 if isinstance(elem, bool):
                     chunk_data += b"\x01" if elem else b"\x00"

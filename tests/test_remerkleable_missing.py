@@ -3,7 +3,7 @@ Tests for missing test vectors from remerkleable.
 This file ports the remaining ~53% of test cases not yet covered.
 """
 
-from dataclasses import dataclass
+
 from hashlib import sha256
 from typing import List as PyList
 
@@ -54,32 +54,32 @@ def merge(a: str, branch: list[str]) -> str:
 
 
 # Container definitions matching remerkleable
-@dataclass
+
 class SingleFieldTestStruct(Container):
     A: U8
 
 
-@dataclass
+
 class SmallTestStruct(Container):
     A: U16
     B: U16
 
 
-@dataclass
+
 class FixedTestStruct(Container):
     A: U8
     B: U64
     C: U32
 
 
-@dataclass
+
 class VarTestStruct(Container):
     A: U16
     B: SSZList  # List[uint16, 1024]
     C: U8
 
 
-@dataclass
+
 class ComplexTestStruct(Container):
     A: U16
     B: SSZList  # List[uint16, 128]

@@ -4,7 +4,7 @@ Port of remerkleable test_typing.py.
 Tests type system, inheritance, and advanced SSZ type features.
 """
 
-from dataclasses import dataclass
+
 from typing import List as PyList
 
 import pytest
@@ -82,7 +82,6 @@ class TestContainerTypes:
     def test_container_definition(self):
         """Test defining container types."""
 
-        @dataclass
         class SimpleContainer(Container):
             a: U8
             b: U16
@@ -103,7 +102,6 @@ class TestContainerTypes:
     def test_container_equality(self):
         """Test container equality."""
 
-        @dataclass
         class TestContainer(Container):
             x: U32
             y: U32
@@ -118,11 +116,9 @@ class TestContainerTypes:
     def test_container_nested(self):
         """Test nested containers."""
 
-        @dataclass
         class Inner(Container):
             value: U16
 
-        @dataclass
         class Outer(Container):
             inner: Inner
             count: U8
@@ -140,11 +136,9 @@ class TestContainerTypes:
     def test_container_inheritance(self):
         """Test container inheritance patterns."""
 
-        @dataclass
         class Base(Container):
             a: U8
 
-        @dataclass
         class Derived(Base):
             b: U16
 
@@ -437,11 +431,9 @@ class TestUnionTypes:
     def test_union_with_containers(self):
         """Test union with container types."""
 
-        @dataclass
         class ContainerA(Container):
             x: U8
 
-        @dataclass
         class ContainerB(Container):
             y: U16
             z: U16
@@ -466,22 +458,18 @@ class TestTreeDepth:
     def test_container_tree_depth(self):
         """Test tree depth for containers."""
 
-        @dataclass
         class OneField(Container):
             a: U8
 
-        @dataclass
         class TwoFields(Container):
             a: U8
             b: U8
 
-        @dataclass
         class ThreeFields(Container):
             a: U8
             b: U8
             c: U8
 
-        @dataclass
         class FourFields(Container):
             a: U8
             b: U8
@@ -509,11 +497,9 @@ class TestComplexInheritance:
     def test_multiple_inheritance(self):
         """Test multiple inheritance with containers."""
 
-        @dataclass
         class Base1(Container):
             a: U8
 
-        @dataclass
         class Base2(Container):
             b: U16
 
@@ -524,15 +510,12 @@ class TestComplexInheritance:
     def test_deep_inheritance(self):
         """Test deep inheritance chains."""
 
-        @dataclass
         class Level1(Container):
             a: U8
 
-        @dataclass
         class Level2(Level1):
             b: U16
 
-        @dataclass
         class Level3(Level2):
             c: U32
 

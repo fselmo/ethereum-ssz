@@ -5,7 +5,6 @@ These tests verify SSZ encoding and hash tree root of Union types.
 """
 
 import hashlib
-from dataclasses import dataclass
 
 from ethereum_types.bytes import Bytes32
 from ethereum_types.numeric import U8, U32
@@ -42,7 +41,7 @@ def chunk(hex_str: str) -> str:
 
 
 # Test container for union tests
-@dataclass
+
 class SingleFieldTestStruct(Container):
     """Container with a single byte field."""
 
@@ -171,7 +170,6 @@ class TestComplexUnion:
         """Test Union containing a Container type."""
 
         # Simple container for testing
-        @dataclass
         class TestStruct(Container):
             A: U16
             B: U8

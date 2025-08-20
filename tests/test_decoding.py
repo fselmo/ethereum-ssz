@@ -4,7 +4,7 @@ Test SSZ decoding functionality.
 These tests verify that we can properly decode SSZ-encoded data back to objects.
 """
 
-from dataclasses import dataclass
+
 
 from ethereum_types.bytes import Bytes32
 from ethereum_types.numeric import U8, U32, U64
@@ -64,7 +64,6 @@ class TestContainerDecoding:
     def test_decode_simple_container(self):
         """Test decoding a simple container with fixed-size fields."""
 
-        @dataclass
         class SimpleContainer(Container):
             a: U8
             b: U16
@@ -188,7 +187,6 @@ class TestRoundTrip:
     def test_complex_container_roundtrip(self):
         """Test round-trip of a complex container."""
 
-        @dataclass
         class ComplexContainer(Container):
             count: U32
             values: Vector

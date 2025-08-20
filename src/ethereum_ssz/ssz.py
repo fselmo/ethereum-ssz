@@ -161,11 +161,11 @@ def encode_vector(vector: Vector[Any]) -> Bytes:
     Vectors are encoded as concatenation of their encoded elements.
     If elements are variable-size, offset encoding is used.
     """
-    # Determine if elements are variable size
-    variable_sizes = [is_variable_size(type(elem)) for elem in vector]
-    element_types = [type(elem) for elem in vector]
+    # Determine if elements are variable size (use .elements for Pydantic)
+    variable_sizes = [is_variable_size(type(elem)) for elem in vector.elements]
+    element_types = [type(elem) for elem in vector.elements]
 
-    return encode_composite(vector, element_types, variable_sizes)
+    return encode_composite(vector.elements, element_types, variable_sizes)
 
 
 def encode_list(ssz_list: SSZList[Any]) -> Bytes:
@@ -175,12 +175,12 @@ def encode_list(ssz_list: SSZList[Any]) -> Bytes:
     Lists are encoded with their length prefix (4 bytes) followed by
     the encoded elements.
     """
-    # First encode the list contents like a vector
-    variable_sizes = [is_variable_size(type(elem)) for elem in ssz_list]
-    element_types = [type(elem) for elem in ssz_list]
+    # First encode the list contents like a vector (use .elements for Pydantic)
+    variable_sizes = [is_variable_size(type(elem)) for elem in ssz_list.elements]
+    element_types = [type(elem) for elem in ssz_list.elements]
 
     encoded_elements = encode_composite(
-        ssz_list, element_types, variable_sizes
+        ssz_list.elements, element_types, variable_sizes
     )
 
     # For SSZ lists, we need to prepend the length

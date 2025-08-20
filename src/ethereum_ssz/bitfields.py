@@ -8,33 +8,36 @@ Bitlists are variable-length bit sequences with a maximum length.
 from collections.abc import Iterator, Sequence
 from typing import Any, Union
 
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from ethereum_types.bytes import Bytes32
 
 
-class Bitvector:
+class Bitvector(BaseModel):
     """
     Fixed-length sequence of bits.
 
     In SSZ, bitvectors are packed into bytes, with bits indexed from 0.
     """
-
-    def __init__(
-        self, bits: Union[Sequence[bool], Sequence[int]], length: int
-    ):
-        """
-        Initialize a Bitvector with fixed length.
-
-        Args:
-            bits: Sequence of booleans or 0/1 integers
-            length: Fixed length of the bitvector
-        """
-        if len(bits) != length:
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
+    bits: list[bool]
+    length: int
+    
+    @field_validator('bits', mode='before')
+    @classmethod
+    def convert_bits(cls, v: Union[Sequence[bool], Sequence[int]]) -> list[bool]:
+        """Convert input to list of bools."""
+        return [bool(bit) for bit in v]
+    
+    @model_validator(mode='after')
+    def validate_length(self) -> 'Bitvector':
+        """Validate that bits match the specified length."""
+        if len(self.bits) != self.length:
             raise ValueError(
-                f"Bitvector requires exactly {length} bits, got {len(bits)}"
+                f"Bitvector requires exactly {self.length} bits, got {len(self.bits)}"
             )
-
-        self.length = length
-        self._bits = [bool(bit) for bit in bits]
+        return self
 
     def __len__(self) -> int:
         """Return the fixed length."""
@@ -47,7 +50,7 @@ class Bitvector:
                 f"Index {index} out of range for Bitvector of length "
                 f"{self.length}"
             )
-        return self._bits[index]
+        return self.bits[index]
 
     def __setitem__(self, index: int, value: bool) -> None:
         """Set bit at index."""
@@ -56,21 +59,21 @@ class Bitvector:
                 f"Index {index} out of range for Bitvector of length "
                 f"{self.length}"
             )
-        self._bits[index] = bool(value)
+        self.bits[index] = bool(value)
 
     def __iter__(self) -> Iterator[bool]:
         """Iterate over bits."""
-        return iter(self._bits)
+        return iter(self.bits)
 
     def __eq__(self, other: Any) -> bool:
         """Check equality."""
         if not isinstance(other, Bitvector):
             return False
-        return self._bits == other._bits and self.length == other.length
+        return self.bits == other.bits and self.length == other.length
 
     def __repr__(self) -> str:
         """String representation."""
-        bit_str = "".join("1" if bit else "0" for bit in self._bits)
+        bit_str = "".join("1" if bit else "0" for bit in self.bits)
         return f"Bitvector[{self.length}]({bit_str})"
 
     def serialize(self) -> bytes:
@@ -84,7 +87,7 @@ class Bitvector:
         result = bytearray(num_bytes)
 
         # Pack bits into bytes
-        for i, bit in enumerate(self._bits):
+        for i, bit in enumerate(self.bits):
             if bit:
                 byte_index = i // 8
                 bit_index = i % 8
@@ -121,79 +124,81 @@ class Bitvector:
             bit = bool(data[byte_index] & (1 << bit_index))
             bits.append(bit)
 
-        return cls(bits, length)
+        return cls(bits=bits, length=length)
 
 
-class Bitlist:
+class Bitlist(BaseModel):
     """
     Variable-length sequence of bits with a maximum length.
 
     In SSZ, bitlists are serialized with a sentinel bit to mark the length.
     """
-
-    def __init__(
-        self, bits: Union[Sequence[bool], Sequence[int]], max_length: int
-    ):
-        """
-        Initialize a Bitlist with maximum length constraint.
-
-        Args:
-            bits: Sequence of booleans or 0/1 integers
-            max_length: Maximum allowed length
-        """
-        if len(bits) > max_length:
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
+    bits: list[bool]
+    max_length: int
+    
+    @field_validator('bits', mode='before')
+    @classmethod
+    def convert_bits(cls, v: Union[Sequence[bool], Sequence[int]]) -> list[bool]:
+        """Convert input to list of bools."""
+        return [bool(bit) for bit in v]
+    
+    @model_validator(mode='after')
+    def validate_max_length(self) -> 'Bitlist':
+        """Validate that bits don't exceed max_length."""
+        if len(self.bits) > self.max_length:
             raise ValueError(
-                f"Bitlist exceeds maximum length {max_length}, got {len(bits)}"
+                f"Bitlist exceeds maximum length {self.max_length}, got {len(self.bits)}"
             )
-
-        self.max_length = max_length
-        self._bits = [bool(bit) for bit in bits]
+        return self
 
     def __len__(self) -> int:
         """Return the current length."""
-        return len(self._bits)
+        return len(self.bits)
 
     def __getitem__(self, index: int) -> bool:
         """Get bit at index."""
-        return self._bits[index]
+        return self.bits[index]
 
     def __setitem__(self, index: int, value: bool) -> None:
         """Set bit at index."""
-        self._bits[index] = bool(value)
+        self.bits[index] = bool(value)
 
     def __iter__(self) -> Iterator[bool]:
         """Iterate over bits."""
-        return iter(self._bits)
+        return iter(self.bits)
 
     def __eq__(self, other: Any) -> bool:
         """Check equality."""
         if not isinstance(other, Bitlist):
             return False
         return (
-            self._bits == other._bits and self.max_length == other.max_length
+            self.bits == other.bits and self.max_length == other.max_length
         )
 
     def __repr__(self) -> str:
         """String representation."""
-        bit_str = "".join("1" if bit else "0" for bit in self._bits)
+        bit_str = "".join("1" if bit else "0" for bit in self.bits)
         return f"Bitlist[{self.max_length}]({bit_str})"
 
     def append(self, bit: bool) -> None:
         """Append a bit."""
-        if len(self._bits) >= self.max_length:
+        if len(self.bits) >= self.max_length:
             raise ValueError(
                 f"Bitlist would exceed maximum length {self.max_length}"
             )
-        self._bits.append(bool(bit))
+        self.bits.append(bool(bit))
 
     def extend(self, bits: Sequence[bool]) -> None:
         """Extend with multiple bits."""
-        new_length = len(self._bits) + len(bits)
+        new_length = len(self.bits) + len(bits)
         if new_length > self.max_length:
             raise ValueError(
                 f"Bitlist would exceed maximum length {self.max_length}"
             )
-        self._bits.extend(bool(bit) for bit in bits)
+        self.bits.extend(bool(bit) for bit in bits)
 
     def serialize(self) -> bytes:
         """
@@ -203,24 +208,24 @@ class Bitlist:
         bit to mark the length. This sentinel is in the first unused bit
         position.
         """
-        if len(self._bits) == 0:
+        if len(self.bits) == 0:
             # Empty bitlist: single byte 0x01 (just the sentinel)
             return b"\x01"
 
         # Calculate bytes needed (including sentinel bit)
-        total_bits = len(self._bits) + 1  # +1 for sentinel
+        total_bits = len(self.bits) + 1  # +1 for sentinel
         num_bytes = (total_bits + 7) // 8
         result = bytearray(num_bytes)
 
         # Pack actual bits
-        for i, bit in enumerate(self._bits):
+        for i, bit in enumerate(self.bits):
             if bit:
                 byte_index = i // 8
                 bit_index = i % 8
                 result[byte_index] |= 1 << bit_index
 
         # Add sentinel bit
-        sentinel_index = len(self._bits)
+        sentinel_index = len(self.bits)
         byte_index = sentinel_index // 8
         bit_index = sentinel_index % 8
         result[byte_index] |= 1 << bit_index
@@ -281,4 +286,4 @@ class Bitlist:
             bit = bool(data[byte_index] & (1 << bit_index))
             bits.append(bit)
 
-        return cls(bits, max_length)
+        return cls(bits=bits, max_length=max_length)

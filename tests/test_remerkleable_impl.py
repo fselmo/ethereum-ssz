@@ -5,7 +5,6 @@ These tests ensure exact compatibility with remerkleable's expected values.
 """
 
 import hashlib
-from dataclasses import dataclass
 from typing import List as PyList
 
 from ethereum_types.bytes import Bytes32
@@ -245,7 +244,6 @@ class TestContainers:
     def test_single_field_struct(self):
         """Test SingleFieldTestStruct container."""
 
-        @dataclass
         class SingleFieldTestStruct(Container):
             A: U8
 
@@ -260,7 +258,6 @@ class TestContainers:
     def test_small_test_struct(self):
         """Test SmallTestStruct with two uint16 fields."""
 
-        @dataclass
         class SmallTestStruct(Container):
             A: U16
             B: U16
@@ -278,7 +275,6 @@ class TestContainers:
     def test_fixed_test_struct(self):
         """Test FixedTestStruct with mixed field types."""
 
-        @dataclass
         class FixedTestStruct(Container):
             A: U8
             B: U64
@@ -356,11 +352,9 @@ class TestComplexStructures:
     def test_nested_containers(self):
         """Test container with nested container field."""
 
-        @dataclass
         class Inner(Container):
             x: U16
 
-        @dataclass
         class Outer(Container):
             a: U8
             b: Inner
@@ -380,7 +374,6 @@ class TestComplexStructures:
     def test_container_with_vector(self):
         """Test container with vector field."""
 
-        @dataclass
         class TestStruct(Container):
             count: U32
             values: Vector
@@ -419,7 +412,6 @@ class TestRoundTrips:
     def test_container_roundtrip(self):
         """Test round-trip for containers."""
 
-        @dataclass
         class TestContainer(Container):
             a: U8
             b: U16

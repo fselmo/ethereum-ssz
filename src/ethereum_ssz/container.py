@@ -4,36 +4,35 @@ SSZ Container implementation - struct-like composites.
 Containers are heterogeneous collections of named fields.
 """
 
-from dataclasses import dataclass, fields, is_dataclass
-from typing import Any, get_type_hints
+from typing import Any
 from typing import Union as PyUnion
 
 from ethereum_types.bytes import Bytes32
+from pydantic import BaseModel, ConfigDict
 
 
-class Container:
+class Container(BaseModel):
     """
     Base class for SSZ containers.
 
     Containers are fixed collections of heterogeneous fields.
-    They should be defined as dataclasses with type annotations.
+    They are now Pydantic models with type annotations.
     """
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Automatically make subclasses into dataclasses."""
-        super().__init_subclass__(**kwargs)
-        # Only apply dataclass if not already applied
-        if not is_dataclass(cls):
-            dataclass(cls)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,  # Allow ethereum-types
+        validate_assignment=True,  # Validate on assignment
+        extra="forbid",  # Don't allow extra fields
+    )
 
     @classmethod
     def get_fields(cls) -> list[tuple[str, type]]:
         """Get the fields and their types."""
-        if is_dataclass(cls):
-            return [(f.name, f.type) for f in fields(cls)]
-        else:
-            # Fallback to type hints
-            return list(get_type_hints(cls).items())
+        # Use Pydantic's model_fields
+        return [
+            (name, field.annotation)
+            for name, field in cls.model_fields.items()
+        ]
 
     def serialize(self) -> bytes:
         """Serialize the container to SSZ bytes."""
@@ -80,17 +79,6 @@ class Container:
 
         # Merkleize the field roots
         return merkleize(roots)
-
-    def __eq__(self, other: object) -> bool:
-        """Check equality based on field values."""
-        if not isinstance(other, self.__class__):
-            return False
-
-        for field_name, _ in self.get_fields():
-            if getattr(self, field_name) != getattr(other, field_name):
-                return False
-
-        return True
 
     def __repr__(self) -> str:
         """String representation of the container."""

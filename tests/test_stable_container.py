@@ -2,7 +2,7 @@
 Test StableContainer implementation.
 """
 
-from dataclasses import dataclass
+
 from typing import Optional
 
 import pytest
@@ -23,7 +23,6 @@ class TestStableContainerBasic:
     def test_stable_container_creation(self):
         """Test creating a StableContainer with optional fields."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -47,7 +46,6 @@ class TestStableContainerBasic:
     def test_stable_container_all_none(self):
         """Test StableContainer with all fields None."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -65,7 +63,6 @@ class TestStableContainerBasic:
     def test_stable_container_all_set(self):
         """Test StableContainer with all fields set."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -83,7 +80,6 @@ class TestStableContainerBasic:
     def test_stable_container_serialization(self):
         """Test basic serialization of StableContainer."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -132,7 +128,6 @@ class TestStableContainerBasic:
     def test_stable_container_hash_tree_root(self):
         """Test hash_tree_root for StableContainer."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -147,7 +142,6 @@ class TestStableContainerBasic:
     def test_stable_container_deserialization(self):
         """Test deserialization of StableContainer."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None
@@ -179,7 +173,6 @@ class TestStableContainerComplex:
     def test_stable_container_with_lists(self):
         """Test StableContainer with list fields."""
 
-        @dataclass
         class TestStable(StableContainer):
             values: Optional[SSZList] = None
             count: Optional[U32] = None
@@ -198,7 +191,6 @@ class TestStableContainerComplex:
     def test_stable_container_encode_via_ssz(self):
         """Test encoding StableContainer through ssz.encode."""
 
-        @dataclass
         class TestStable(StableContainer):
             a: Optional[U8] = None
             b: Optional[U16] = None

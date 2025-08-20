@@ -7,7 +7,6 @@ hash tree root values.
 """
 
 import hashlib
-from dataclasses import dataclass
 from typing import List as PyList
 from typing import Optional
 
@@ -62,14 +61,14 @@ for layer in range(1, 32):
 
 
 # Test containers to match remerkleable
-@dataclass
+
 class SingleFieldTestStruct(Container):
     """Container with a single byte field."""
 
     A: U8
 
 
-@dataclass
+
 class SmallTestStruct(Container):
     """Container with two uint16 fields."""
 
@@ -77,7 +76,7 @@ class SmallTestStruct(Container):
     B: U16
 
 
-@dataclass
+
 class FixedTestStruct(Container):
     """Container with mixed fixed-size fields."""
 
@@ -86,7 +85,7 @@ class FixedTestStruct(Container):
     C: U32
 
 
-@dataclass
+
 class VarTestStruct(Container):
     """Container with variable-size list."""
 
@@ -95,7 +94,7 @@ class VarTestStruct(Container):
     C: U8
 
 
-@dataclass
+
 class ComplexTestStruct(Container):
     """Complex nested container."""
 

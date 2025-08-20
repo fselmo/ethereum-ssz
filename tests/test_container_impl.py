@@ -5,7 +5,6 @@ These tests verify SSZ encoding/decoding of Container types.
 """
 
 import hashlib
-from dataclasses import dataclass
 
 from ethereum_types.bytes import Bytes32
 from ethereum_types.numeric import U8, U32, U64
@@ -34,14 +33,12 @@ def chunk(hex_str: str) -> str:
 
 
 # Define test containers following remerkleable's pattern
-@dataclass
 class SingleFieldTestStruct(Container):
     """Container with a single byte field."""
 
     A: U8
 
 
-@dataclass
 class SmallTestStruct(Container):
     """Container with two uint16 fields."""
 
@@ -49,7 +46,6 @@ class SmallTestStruct(Container):
     B: U16
 
 
-@dataclass
 class FixedTestStruct(Container):
     """Container with mixed fixed-size fields."""
 
@@ -58,7 +54,6 @@ class FixedTestStruct(Container):
     C: U32
 
 
-@dataclass
 class VarTestStruct(Container):
     """Container with variable-size list."""
 
@@ -67,7 +62,6 @@ class VarTestStruct(Container):
     C: U8
 
 
-@dataclass
 class ComplexTestStruct(Container):
     """Complex nested container."""
 

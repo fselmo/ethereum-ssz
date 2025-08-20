@@ -12,6 +12,7 @@ from typing import (
 )
 
 from ethereum_types.bytes import Bytes
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Type variable for generic container elements
 T = TypeVar("T")
@@ -20,53 +21,85 @@ T = TypeVar("T")
 BYTES_PER_LENGTH_OFFSET = 4
 
 
-class Vector(Generic[T], list[T]):
+class Vector(BaseModel, Generic[T]):
     """
     Fixed-length homogeneous collection.
 
     In SSZ, vectors have a fixed number of elements of the same type.
     """
 
+    elements: list[T]
     length: int
     element_type: type[T]
 
-    def __init__(
-        self, elements: Sequence[T], length: int, element_type: type[T]
-    ):
-        """
-        Initialize a Vector with fixed length.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+    )
 
-        Args:
-            elements: The elements to store
-            length: The fixed length of the vector
-            element_type: The type of elements
-        """
-        if len(elements) != length:
+    @model_validator(mode='after')
+    def validate_length(self) -> 'Vector[T]':
+        """Validate that elements match the expected length."""
+        if len(self.elements) != self.length:
             raise ValueError(
-                f"Vector requires exactly {length} elements, "
-                f"got {len(elements)}"
+                f"Vector requires exactly {self.length} elements, "
+                f"got {len(self.elements)}"
             )
-        super().__init__(elements)
-        self.length = length
-        self.element_type = element_type
+        return self
 
-    def __setitem__(self, key: int, value: T) -> None:  # type: ignore[override]
-        """Override to maintain type safety."""
+    @field_validator('elements')
+    @classmethod
+    def validate_element_types(cls, v: list[T], info) -> list[T]:
+        """Validate element types if element_type is available."""
+        if hasattr(info, 'data') and 'element_type' in info.data:
+            element_type = info.data['element_type']
+            for i, elem in enumerate(v):
+                if not isinstance(elem, element_type):
+                    raise TypeError(
+                        f"Vector element at index {i} must be of type "
+                        f"{element_type.__name__}, got {type(elem).__name__}"
+                    )
+        return v
+
+    def __getitem__(self, key: int) -> T:
+        """Get element by index."""
+        return self.elements[key]
+
+    def __setitem__(self, key: int, value: T) -> None:
+        """Set element by index with type validation."""
         if not isinstance(value, self.element_type):
             raise TypeError(
                 f"Vector element must be of type {self.element_type.__name__}"
             )
-        super().__setitem__(key, value)
+        self.elements[key] = value
+
+    def __len__(self) -> int:
+        """Return length of vector."""
+        return len(self.elements)
+
+    def __iter__(self):
+        """Iterate over elements."""
+        return iter(self.elements)
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, Vector):
+            return False
+        return (
+            self.elements == other.elements
+            and self.length == other.length
+            and self.element_type == other.element_type
+        )
 
     def append(self, value: T) -> None:
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot append to fixed-length Vector")
 
-    def extend(self, values: Sequence[T]) -> None:  # type: ignore[override]
+    def extend(self, values: Sequence[T]) -> None:
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot extend fixed-length Vector")
 
-    def pop(self, index: int = -1) -> T:  # type: ignore[override]
+    def pop(self, index: int = -1) -> T:
         """Disabled for fixed-length vectors."""
         raise NotImplementedError("Cannot pop from fixed-length Vector")
 
@@ -75,47 +108,79 @@ class Vector(Generic[T], list[T]):
         raise NotImplementedError("Cannot remove from fixed-length Vector")
 
 
-class List(Generic[T], list[T]):
+class List(BaseModel, Generic[T]):
     """
     Variable-length homogeneous collection with a maximum length.
 
     In SSZ, lists can have a variable number of elements up to a maximum.
     """
 
+    elements: list[T] = Field(default_factory=list)
     max_length: int
     element_type: type[T]
 
-    def __init__(
-        self, elements: Sequence[T], max_length: int, element_type: type[T]
-    ):
-        """
-        Initialize a List with maximum length constraint.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+    )
 
-        Args:
-            elements: The elements to store
-            max_length: The maximum allowed length
-            element_type: The type of elements
-        """
-        if len(elements) > max_length:
+    @model_validator(mode='after')
+    def validate_max_length(self) -> 'List[T]':
+        """Validate that elements don't exceed max length."""
+        if len(self.elements) > self.max_length:
             raise ValueError(
-                f"List exceeds maximum length {max_length}, "
-                f"got {len(elements)}"
+                f"List exceeds maximum length {self.max_length}, "
+                f"got {len(self.elements)}"
             )
-        super().__init__(elements)
-        self.max_length = max_length
-        self.element_type = element_type
+        return self
 
-    def __setitem__(self, key: int, value: T) -> None:  # type: ignore[override]
-        """Override to maintain type safety."""
+    @field_validator('elements')
+    @classmethod
+    def validate_element_types(cls, v: list[T], info) -> list[T]:
+        """Validate element types if element_type is available."""
+        if hasattr(info, 'data') and 'element_type' in info.data:
+            element_type = info.data['element_type']
+            for i, elem in enumerate(v):
+                if not isinstance(elem, element_type):
+                    raise TypeError(
+                        f"List element at index {i} must be of type "
+                        f"{element_type.__name__}, got {type(elem).__name__}"
+                    )
+        return v
+
+    def __getitem__(self, key: int) -> T:
+        """Get element by index."""
+        return self.elements[key]
+
+    def __setitem__(self, key: int, value: T) -> None:
+        """Set element by index with type validation."""
         if not isinstance(value, self.element_type):
             raise TypeError(
                 f"List element must be of type {self.element_type.__name__}"
             )
-        super().__setitem__(key, value)
+        self.elements[key] = value
+
+    def __len__(self) -> int:
+        """Return current length of list."""
+        return len(self.elements)
+
+    def __iter__(self):
+        """Iterate over elements."""
+        return iter(self.elements)
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, List):
+            return False
+        return (
+            self.elements == other.elements
+            and self.max_length == other.max_length
+            and self.element_type == other.element_type
+        )
 
     def append(self, value: T) -> None:
-        """Append with length check."""
-        if len(self) >= self.max_length:
+        """Append with length and type check."""
+        if len(self.elements) >= self.max_length:
             raise ValueError(
                 f"List would exceed maximum length {self.max_length}"
             )
@@ -123,11 +188,11 @@ class List(Generic[T], list[T]):
             raise TypeError(
                 f"List element must be of type {self.element_type.__name__}"
             )
-        super().append(value)
+        self.elements.append(value)
 
-    def extend(self, values: Sequence[T]) -> None:  # type: ignore[override]
-        """Extend with length check."""
-        new_length = len(self) + len(values)
+    def extend(self, values: Sequence[T]) -> None:
+        """Extend with length and type check."""
+        new_length = len(self.elements) + len(values)
         if new_length > self.max_length:
             raise ValueError(
                 f"List would exceed maximum length {self.max_length}"
@@ -138,7 +203,19 @@ class List(Generic[T], list[T]):
                     f"List element must be of type "
                     f"{self.element_type.__name__}"
                 )
-        super().extend(values)
+        self.elements.extend(values)
+
+    def pop(self, index: int = -1) -> T:
+        """Remove and return element at index."""
+        return self.elements.pop(index)
+
+    def remove(self, value: T) -> None:
+        """Remove first occurrence of value."""
+        self.elements.remove(value)
+
+    def clear(self) -> None:
+        """Remove all elements."""
+        self.elements.clear()
 
 
 def is_variable_size(type_: PyUnion[type[Any], Any]) -> bool:
@@ -253,7 +330,11 @@ def encode_composite(
 
         result = b""
         for element in elements:
-            result += encode(element)
+            # Handle Vector/List by encoding their elements
+            if isinstance(element, (Vector, List)):
+                result += encode_sequence(element.elements)
+            else:
+                result += encode(element)
         return Bytes(result)
 
     # Mixed or all variable: need offset handling
@@ -277,16 +358,32 @@ def encode_composite(
                 current_offset.to_bytes(BYTES_PER_LENGTH_OFFSET, "little")
             )
             # Encode and store in variable part
-            encoded = encode(element)
+            if isinstance(element, (Vector, List)):
+                encoded = encode_sequence(element.elements)
+            else:
+                encoded = encode(element)
             variable_parts.append(encoded)
             current_offset += len(encoded)
         else:
             # Store value directly in fixed part
-            fixed_parts.append(encode(element))
+            if isinstance(element, (Vector, List)):
+                fixed_parts.append(encode_sequence(element.elements))
+            else:
+                fixed_parts.append(encode(element))
 
     # Concatenate fixed parts and variable parts
     result = b"".join(fixed_parts) + b"".join(variable_parts)
     return Bytes(result)
+
+
+def encode_sequence(elements: Sequence[Any]) -> bytes:
+    """Encode a sequence of elements."""
+    from .ssz import encode
+    
+    result = b""
+    for elem in elements:
+        result += encode(elem)
+    return result
 
 
 def get_fixed_size(type_: PyUnion[type[Any], Any]) -> int:
@@ -326,7 +423,7 @@ def get_fixed_size(type_: PyUnion[type[Any], Any]) -> int:
         # This is inefficient but correct
         from .ssz import encode
 
-        encoded = encode(type_)
+        encoded = encode_sequence(type_.elements)
         return len(encoded)
 
     # Handle List instances (they are variable size)

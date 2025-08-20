@@ -6,16 +6,15 @@ Note: This is a basic implementation for compatibility testing.
 Full implementation would require more advanced merkleization support.
 """
 
-from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from ethereum_types.bytes import Bytes32
+from pydantic import Field, PrivateAttr
 
 from .bitfields import Bitvector
 from .container import Container
 
 
-@dataclass
 class StableContainer(Container):
     """
     StableContainer with optional fields support.
@@ -24,14 +23,14 @@ class StableContainer(Container):
     the ability to have optional fields that can be None.
     """
 
-    # Maximum number of fields allowed
-    _max_fields: int = field(default=16, init=False, repr=False)
-    _active_fields: Optional[Bitvector] = field(
-        default=None, init=False, repr=False
-    )
+    # Private attributes using Pydantic's PrivateAttr
+    _max_fields: int = PrivateAttr(default=16)
+    _active_fields: Optional[Bitvector] = PrivateAttr(default=None)
 
-    def __post_init__(self) -> None:
-        """Initialize active fields bitvector."""
+    def model_post_init(self, __context: Any) -> None:
+        """Initialize active fields bitvector after model creation."""
+        super().model_post_init(__context)
+
         if self._active_fields is None:
             # Create bitvector to track which fields are active
             self._active_fields = Bitvector(
@@ -52,7 +51,7 @@ class StableContainer(Container):
     def active_fields(self) -> Bitvector:
         """Get the bitvector of active fields."""
         if self._active_fields is None:
-            self.__post_init__()
+            self.model_post_init(None)
         return self._active_fields
 
     def serialize(self) -> bytes:
@@ -241,29 +240,26 @@ def create_stable_container_class(
     Returns:
         A new StableContainer class
     """
-    # Create class dynamically
-    annotations = {}
-    defaults = {}
+    from typing import Optional
+
+    # Create class dynamically with Pydantic fields
+    field_definitions = {}
 
     for field_name, field_type in fields.items():
-        # Make all fields optional
-        annotations[field_name] = Optional[field_type]
-        defaults[field_name] = None
+        # Make all fields optional with default None
+        field_definitions[field_name] = (
+            Optional[field_type], Field(default=None)
+        )
 
-    # Add special fields
-    annotations["_max_fields"] = int
-    annotations["_active_fields"] = Optional[Bitvector]
+    # Create the class with proper annotations
+    new_class = type(
+        name,
+        (StableContainer,),
+        {
+            "__annotations__": {k: v[0] for k, v in field_definitions.items()},
+            **{k: v[1] for k, v in field_definitions.items()},
+            "_max_fields": max_fields,
+        }
+    )
 
-    # Create the class
-    cls_dict = {
-        "__annotations__": annotations,
-        "_max_fields": max_fields,
-        "_active_fields": None,
-        **defaults,
-    }
-
-    # Create new class inheriting from StableContainer
-    new_class = type(name, (StableContainer,), cls_dict)
-
-    # Make it a dataclass
-    return dataclass(new_class)
+    return new_class
