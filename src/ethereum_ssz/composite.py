@@ -12,7 +12,12 @@ from typing import (
 )
 
 from ethereum_types.bytes import Bytes
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    model_validator,
+)
 
 # Type variable for generic container elements
 T = TypeVar("T")
@@ -37,41 +42,49 @@ class Vector(BaseModel, Generic[T]):
         validate_assignment=True,
     )
 
-    @model_validator(mode='after')
-    def validate_length(self) -> 'Vector[T]':
-        """Validate that elements match the expected length."""
+    @model_validator(mode="after")
+    def validate_length_and_coerce(self) -> "Vector[T]":
+        """Validate that elements match the expected length and coerce types."""
         if len(self.elements) != self.length:
             raise ValueError(
                 f"Vector requires exactly {self.length} elements, "
                 f"got {len(self.elements)}"
             )
-        return self
 
-    @field_validator('elements')
-    @classmethod
-    def validate_element_types(cls, v: list[T], info) -> list[T]:
-        """Validate element types if element_type is available."""
-        if hasattr(info, 'data') and 'element_type' in info.data:
-            element_type = info.data['element_type']
-            for i, elem in enumerate(v):
-                if not isinstance(elem, element_type):
+        # Coerce elements to the correct type
+        coerced_elements = []
+        for i, elem in enumerate(self.elements):
+            if isinstance(elem, self.element_type):
+                coerced_elements.append(elem)
+            else:
+                # Try to coerce to the element type
+                try:
+                    coerced_elements.append(self.element_type(elem))
+                except (TypeError, ValueError, OverflowError) as e:
                     raise TypeError(
-                        f"Vector element at index {i} must be of type "
-                        f"{element_type.__name__}, got {type(elem).__name__}"
+                        f"Vector element at index {i} could not be converted to "
+                        f"{self.element_type.__name__}: {elem!r}. Error: {e}"
                     )
-        return v
+        object.__setattr__(self, "elements", coerced_elements)
+        return self
 
     def __getitem__(self, key: int) -> T:
         """Get element by index."""
         return self.elements[key]
 
     def __setitem__(self, key: int, value: T) -> None:
-        """Set element by index with type validation."""
-        if not isinstance(value, self.element_type):
-            raise TypeError(
-                f"Vector element must be of type {self.element_type.__name__}"
-            )
-        self.elements[key] = value
+        """Set element by index with type coercion."""
+        if isinstance(value, self.element_type):
+            self.elements[key] = value
+        else:
+            try:
+                coerced_value = self.element_type(value)
+                self.elements[key] = coerced_value
+            except (TypeError, ValueError, OverflowError) as e:
+                raise TypeError(
+                    f"Cannot set vector element - could not convert to "
+                    f"{self.element_type.__name__}: {value!r}. Error: {e}"
+                )
 
     def __len__(self) -> int:
         """Return length of vector."""
@@ -124,41 +137,49 @@ class List(BaseModel, Generic[T]):
         validate_assignment=True,
     )
 
-    @model_validator(mode='after')
-    def validate_max_length(self) -> 'List[T]':
-        """Validate that elements don't exceed max length."""
+    @model_validator(mode="after")
+    def validate_max_length_and_coerce(self) -> "List[T]":
+        """Validate that elements don't exceed max length and coerce types."""
         if len(self.elements) > self.max_length:
             raise ValueError(
                 f"List exceeds maximum length {self.max_length}, "
                 f"got {len(self.elements)}"
             )
-        return self
 
-    @field_validator('elements')
-    @classmethod
-    def validate_element_types(cls, v: list[T], info) -> list[T]:
-        """Validate element types if element_type is available."""
-        if hasattr(info, 'data') and 'element_type' in info.data:
-            element_type = info.data['element_type']
-            for i, elem in enumerate(v):
-                if not isinstance(elem, element_type):
+        # Coerce elements to the correct type
+        coerced_elements = []
+        for i, elem in enumerate(self.elements):
+            if isinstance(elem, self.element_type):
+                coerced_elements.append(elem)
+            else:
+                # Try to coerce to the element type
+                try:
+                    coerced_elements.append(self.element_type(elem))
+                except (TypeError, ValueError, OverflowError) as e:
                     raise TypeError(
-                        f"List element at index {i} must be of type "
-                        f"{element_type.__name__}, got {type(elem).__name__}"
+                        f"List element at index {i} could not be converted to "
+                        f"{self.element_type.__name__}: {elem!r}. Error: {e}"
                     )
-        return v
+        object.__setattr__(self, "elements", coerced_elements)
+        return self
 
     def __getitem__(self, key: int) -> T:
         """Get element by index."""
         return self.elements[key]
 
     def __setitem__(self, key: int, value: T) -> None:
-        """Set element by index with type validation."""
-        if not isinstance(value, self.element_type):
-            raise TypeError(
-                f"List element must be of type {self.element_type.__name__}"
-            )
-        self.elements[key] = value
+        """Set element by index with type coercion."""
+        if isinstance(value, self.element_type):
+            self.elements[key] = value
+        else:
+            try:
+                coerced_value = self.element_type(value)
+                self.elements[key] = coerced_value
+            except (TypeError, ValueError, OverflowError) as e:
+                raise TypeError(
+                    f"Cannot set list element - could not convert to "
+                    f"{self.element_type.__name__}: {value!r}. Error: {e}"
+                )
 
     def __len__(self) -> int:
         """Return current length of list."""
@@ -179,31 +200,47 @@ class List(BaseModel, Generic[T]):
         )
 
     def append(self, value: T) -> None:
-        """Append with length and type check."""
+        """Append with length check and type coercion."""
         if len(self.elements) >= self.max_length:
             raise ValueError(
                 f"List would exceed maximum length {self.max_length}"
             )
-        if not isinstance(value, self.element_type):
-            raise TypeError(
-                f"List element must be of type {self.element_type.__name__}"
-            )
-        self.elements.append(value)
+
+        # Coerce value to element_type if needed
+        if isinstance(value, self.element_type):
+            self.elements.append(value)
+        else:
+            try:
+                coerced_value = self.element_type(value)
+                self.elements.append(coerced_value)
+            except (TypeError, ValueError, OverflowError) as e:
+                raise TypeError(
+                    f"Cannot append value to list - could not convert to "
+                    f"{self.element_type.__name__}: {value!r}. Error: {e}"
+                )
 
     def extend(self, values: Sequence[T]) -> None:
-        """Extend with length and type check."""
+        """Extend with length check and type coercion."""
         new_length = len(self.elements) + len(values)
         if new_length > self.max_length:
             raise ValueError(
                 f"List would exceed maximum length {self.max_length}"
             )
-        for value in values:
-            if not isinstance(value, self.element_type):
-                raise TypeError(
-                    f"List element must be of type "
-                    f"{self.element_type.__name__}"
-                )
-        self.elements.extend(values)
+
+        # Coerce values to element_type if needed
+        coerced_values = []
+        for i, value in enumerate(values):
+            if isinstance(value, self.element_type):
+                coerced_values.append(value)
+            else:
+                try:
+                    coerced_values.append(self.element_type(value))
+                except (TypeError, ValueError, OverflowError) as e:
+                    raise TypeError(
+                        f"Cannot extend list - could not convert element at index {i} to "
+                        f"{self.element_type.__name__}: {value!r}. Error: {e}"
+                    )
+        self.elements.extend(coerced_values)
 
     def pop(self, index: int = -1) -> T:
         """Remove and return element at index."""
@@ -379,7 +416,7 @@ def encode_composite(
 def encode_sequence(elements: Sequence[Any]) -> bytes:
     """Encode a sequence of elements."""
     from .ssz import encode
-    
+
     result = b""
     for elem in elements:
         result += encode(elem)
@@ -421,7 +458,6 @@ def get_fixed_size(type_: PyUnion[type[Any], Any]) -> int:
         # but their actual byte size depends on whether elements are variable
         # For now, we need to actually encode it to get the size
         # This is inefficient but correct
-        from .ssz import encode
 
         encoded = encode_sequence(type_.elements)
         return len(encoded)

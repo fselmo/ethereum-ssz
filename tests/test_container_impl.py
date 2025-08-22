@@ -157,7 +157,7 @@ class TestContainerWithLists:
         """Test container with empty list."""
         s = VarTestStruct(
             A=U16(0xABCD),
-            B=SSZList([], max_length=1024, element_type=U16),
+            B=SSZList(elements=[], max_length=1024, element_type=U16),
             C=U8(0xFF),
         )
 
@@ -172,7 +172,9 @@ class TestContainerWithLists:
         s = VarTestStruct(
             A=U16(0xABCD),
             B=SSZList(
-                [U16(1), U16(2), U16(3)], max_length=1024, element_type=U16
+                elements=[U16(1), U16(2), U16(3)],
+                max_length=1024,
+                element_type=U16,
             ),
             C=U8(0xFF),
         )

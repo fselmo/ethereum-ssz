@@ -248,7 +248,8 @@ def create_stable_container_class(
     for field_name, field_type in fields.items():
         # Make all fields optional with default None
         field_definitions[field_name] = (
-            Optional[field_type], Field(default=None)
+            Optional[field_type],
+            Field(default=None),
         )
 
     # Create the class with proper annotations
@@ -259,7 +260,7 @@ def create_stable_container_class(
             "__annotations__": {k: v[0] for k, v in field_definitions.items()},
             **{k: v[1] for k, v in field_definitions.items()},
             "_max_fields": max_fields,
-        }
+        },
     )
 
     return new_class

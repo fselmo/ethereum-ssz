@@ -4,7 +4,6 @@ Port of remerkleable test_typing.py.
 Tests type system, inheritance, and advanced SSZ type features.
 """
 
-
 from typing import List as PyList
 
 import pytest
@@ -159,7 +158,9 @@ class TestVectorTypes:
     def test_vector_creation(self):
         """Test creating vectors."""
         # Fixed-size vector of uint8
-        vec = Vector([U8(i) for i in range(10)], length=10, element_type=U8)
+        vec = Vector(
+            elements=[U8(i) for i in range(10)], length=10, element_type=U8
+        )
         assert len(vec) == 10
         assert vec[0] == U8(0)
         assert vec[9] == U8(9)
@@ -167,19 +168,23 @@ class TestVectorTypes:
     def test_vector_bounds(self):
         """Test vector length constraints."""
         # Correct length
-        vec = Vector([U8(1), U8(2), U8(3)], length=3, element_type=U8)
+        vec = Vector(elements=[U8(1), U8(2), U8(3)], length=3, element_type=U8)
         assert len(vec) == 3
 
         # Wrong length should raise
         with pytest.raises(ValueError):
-            Vector([U8(1), U8(2)], length=3, element_type=U8)
+            Vector(elements=[U8(1), U8(2)], length=3, element_type=U8)
 
         with pytest.raises(ValueError):
-            Vector([U8(1), U8(2), U8(3), U8(4)], length=3, element_type=U8)
+            Vector(
+                elements=[U8(1), U8(2), U8(3), U8(4)],
+                length=3,
+                element_type=U8,
+            )
 
     def test_vector_modification(self):
         """Test modifying vector elements."""
-        vec = Vector([U8(0)] * 5, length=5, element_type=U8)
+        vec = Vector(elements=[U8(0)] * 5, length=5, element_type=U8)
 
         # Modify element
         vec[2] = U8(42)
@@ -196,10 +201,14 @@ class TestVectorTypes:
     def test_vector_of_vectors(self):
         """Test nested vectors."""
         inner_vecs = [
-            Vector([U8(i + j) for j in range(3)], length=3, element_type=U8)
+            Vector(
+                elements=[U8(i + j) for j in range(3)],
+                length=3,
+                element_type=U8,
+            )
             for i in range(0, 6, 3)
         ]
-        outer_vec = Vector(inner_vecs, length=2, element_type=Vector)
+        outer_vec = Vector(elements=inner_vecs, length=2, element_type=Vector)
 
         assert len(outer_vec) == 2
         assert len(outer_vec[0]) == 3
@@ -214,7 +223,7 @@ class TestListTypes:
         """Test creating lists."""
         # Variable-size list with max length
         lst = SSZList(
-            [U8(i) for i in range(5)], max_length=10, element_type=U8
+            elements=[U8(i) for i in range(5)], max_length=10, element_type=U8
         )
         assert len(lst) == 5
         assert lst[0] == U8(0)
@@ -223,16 +232,24 @@ class TestListTypes:
     def test_list_bounds(self):
         """Test list max length constraints."""
         # Within bounds
-        lst = SSZList([U8(1), U8(2), U8(3)], max_length=5, element_type=U8)
+        lst = SSZList(
+            elements=[U8(1), U8(2), U8(3)], max_length=5, element_type=U8
+        )
         assert len(lst) == 3
 
         # Exceeds max length
         with pytest.raises(ValueError):
-            SSZList([U8(i) for i in range(10)], max_length=5, element_type=U8)
+            SSZList(
+                elements=[U8(i) for i in range(10)],
+                max_length=5,
+                element_type=U8,
+            )
 
     def test_list_modification(self):
         """Test modifying list elements."""
-        lst = SSZList([U8(0), U8(1), U8(2)], max_length=10, element_type=U8)
+        lst = SSZList(
+            elements=[U8(0), U8(1), U8(2)], max_length=10, element_type=U8
+        )
 
         # Modify element
         lst[1] = U8(42)
@@ -245,14 +262,14 @@ class TestListTypes:
 
         # Cannot exceed max length
         lst2 = SSZList(
-            [U8(i) for i in range(10)], max_length=10, element_type=U8
+            elements=[U8(i) for i in range(10)], max_length=10, element_type=U8
         )
         with pytest.raises(ValueError):
             lst2.append(U8(10))
 
     def test_empty_list(self):
         """Test empty lists."""
-        lst = SSZList([], max_length=10, element_type=U8)
+        lst = SSZList(elements=[], max_length=10, element_type=U8)
         assert len(lst) == 0
 
         # Can append to empty list
@@ -267,29 +284,29 @@ class TestBitvectorTypes:
     def test_bitvector_sizes(self):
         """Test various bitvector sizes."""
         # Small bitvector
-        bv1 = Bitvector([True], length=1)
+        bv1 = Bitvector(bits=[True], length=1)
         assert len(bv1) == 1
         assert bv1[0] is True
 
         # Medium bitvector
-        bv8 = Bitvector([False] * 8, length=8)
+        bv8 = Bitvector(bits=[False] * 8, length=8)
         assert len(bv8) == 8
         assert all(not bit for bit in bv8)
 
         # Large bitvector
-        bv256 = Bitvector([True, False] * 128, length=256)
+        bv256 = Bitvector(bits=[True, False] * 128, length=256)
         assert len(bv256) == 256
         assert bv256[0] is True
         assert bv256[1] is False
 
         # Very large bitvector
-        bv1024 = Bitvector([False] * 1024, length=1024)
+        bv1024 = Bitvector(bits=[False] * 1024, length=1024)
         assert len(bv1024) == 1024
 
     def test_bitvector_iteration(self):
         """Test iterating over bitvector."""
         pattern = [True, False, True, True, False, False, True, False]
-        bv = Bitvector(pattern, length=8)
+        bv = Bitvector(bits=pattern, length=8)
 
         # Iterate and check
         for i, bit in enumerate(bv):
@@ -300,7 +317,7 @@ class TestBitvectorTypes:
 
     def test_bitvector_modification(self):
         """Test modifying bitvector bits."""
-        bv = Bitvector([False] * 8, length=8)
+        bv = Bitvector(bits=[False] * 8, length=8)
 
         # Set individual bits
         bv[0] = True
@@ -326,20 +343,20 @@ class TestBitlistTypes:
     def test_bitlist_sizes(self):
         """Test various bitlist sizes."""
         # Empty bitlist
-        bl0 = Bitlist([], max_length=10)
+        bl0 = Bitlist(bits=[], max_length=10)
         assert len(bl0) == 0
 
         # Small bitlist
-        bl4 = Bitlist([True, False, True, False], max_length=10)
+        bl4 = Bitlist(bits=[True, False, True, False], max_length=10)
         assert len(bl4) == 4
 
         # At max length
-        bl10 = Bitlist([True] * 10, max_length=10)
+        bl10 = Bitlist(bits=[True] * 10, max_length=10)
         assert len(bl10) == 10
 
     def test_bitlist_modification(self):
         """Test modifying bitlist."""
-        bl = Bitlist([True, False], max_length=10)
+        bl = Bitlist(bits=[True, False], max_length=10)
 
         # Append bits
         bl.append(True)
@@ -353,13 +370,13 @@ class TestBitlistTypes:
         assert bl[4] is True
 
         # Cannot exceed max length
-        bl_full = Bitlist([True] * 10, max_length=10)
+        bl_full = Bitlist(bits=[True] * 10, max_length=10)
         with pytest.raises(ValueError):
             bl_full.append(False)
 
     def test_bitlist_access(self):
         """Test accessing bitlist elements."""
-        bl = Bitlist([True, False, True, False, True], max_length=10)
+        bl = Bitlist(bits=[True, False, True, False, True], max_length=10)
 
         # Direct access
         assert bl[0] is True

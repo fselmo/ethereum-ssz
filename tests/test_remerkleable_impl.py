@@ -132,7 +132,7 @@ class TestBitfields:
         """Test Bitvector[8] with pattern TTFTFTFF."""
         # TTFTFTFF = 11010100 (MSB to LSB) = 0x2b (LSB to MSB in byte)
         bits = [True, True, False, True, False, True, False, False]
-        bv = Bitvector(bits, length=8)
+        bv = Bitvector(bits=bits, length=8)
 
         encoded = ssz.encode(bv)
         assert encoded == b"\x2b"  # 00101011 in binary (LSB first)
@@ -143,7 +143,7 @@ class TestBitfields:
     def test_bitlist8_pattern(self):
         """Test Bitlist[8] with pattern TTFTFTFF."""
         bits = [True, True, False, True, False, True, False, False]
-        bl = Bitlist(bits, max_length=8)
+        bl = Bitlist(bits=bits, max_length=8)
 
         encoded = ssz.encode(bl)
         # 0x2b for bits + 0x01 for sentinel at position 8
@@ -160,7 +160,7 @@ class TestBitfields:
         """Test Bitvector[4] with pattern FTFT."""
         # FTFT = 0101 (MSB to LSB) = 0x0a (LSB to MSB in byte)
         bits = [False, True, False, True]
-        bv = Bitvector(bits, length=4)
+        bv = Bitvector(bits=bits, length=4)
 
         encoded = ssz.encode(bv)
         assert encoded == b"\x0a"  # 00001010 in binary
@@ -171,7 +171,7 @@ class TestBitfields:
     def test_bitlist4_pattern(self):
         """Test Bitlist[4] with pattern FTFT."""
         bits = [False, True, False, True]
-        bl = Bitlist(bits, max_length=4)
+        bl = Bitlist(bits=bits, max_length=4)
 
         encoded = ssz.encode(bl)
         # 0x0a for bits + sentinel at position 4 = 0x1a
@@ -180,7 +180,7 @@ class TestBitfields:
     def test_bitvector512_all_ones(self):
         """Test Bitvector[512] with all bits set."""
         bits = [True] * 512
-        bv = Bitvector(bits, length=512)
+        bv = Bitvector(bits=bits, length=512)
 
         encoded = ssz.encode(bv)
         assert encoded == b"\xff" * 64  # 512 bits = 64 bytes
@@ -194,7 +194,7 @@ class TestBitfields:
         """Test Bitvector[513] with mixed pattern."""
         # 513 bits = 64 bytes + 1 bit
         bits = [True] * 512 + [True]
-        bv = Bitvector(bits, length=513)
+        bv = Bitvector(bits=bits, length=513)
 
         encoded = ssz.encode(bv)
         assert len(encoded) == 65  # 513 bits = 65 bytes
@@ -208,7 +208,7 @@ class TestByteArrays:
     def test_byte_vector_48(self):
         """Test Vector[byte, 48] with range data."""
         data = [U8(i) for i in range(48)]
-        vec = Vector(data, length=48, element_type=U8)
+        vec = Vector(elements=data, length=48, element_type=U8)
 
         encoded = ssz.encode(vec)
         assert encoded == bytes(range(48))
@@ -220,7 +220,7 @@ class TestByteArrays:
 
     def test_byte_list_empty(self):
         """Test empty List[byte, 10]."""
-        lst = SSZList([], max_length=10, element_type=U8)
+        lst = SSZList(elements=[], max_length=10, element_type=U8)
 
         encoded = ssz.encode(lst)
         assert encoded == b""
@@ -378,7 +378,9 @@ class TestComplexStructures:
             count: U32
             values: Vector
 
-        values = Vector([U8(i) for i in range(4)], length=4, element_type=U8)
+        values = Vector(
+            elements=[U8(i) for i in range(4)], length=4, element_type=U8
+        )
         obj = TestStruct(count=U32(4), values=values)
 
         encoded = ssz.encode(obj)

@@ -62,11 +62,11 @@ for layer in range(1, 32):
 
 # Test containers to match remerkleable
 
+
 class SingleFieldTestStruct(Container):
     """Container with a single byte field."""
 
     A: U8
-
 
 
 class SmallTestStruct(Container):
@@ -74,7 +74,6 @@ class SmallTestStruct(Container):
 
     A: U16
     B: U16
-
 
 
 class FixedTestStruct(Container):
@@ -85,14 +84,12 @@ class FixedTestStruct(Container):
     C: U32
 
 
-
 class VarTestStruct(Container):
     """Container with variable-size list."""
 
     A: U16
     B: SSZList  # List[uint16, 1024]
     C: U8
-
 
 
 class ComplexTestStruct(Container):
@@ -186,7 +183,7 @@ class TestRemerkleeableVectors:
 
     def test_long_bitvector_512(self):
         """Test long bitvector of 512 bits all set."""
-        bv = Bitvector([1] * 512, length=512)
+        bv = Bitvector(bits=[1] * 512, length=512)
         encoded = ssz.encode(bv)
         assert encoded.hex() == "ff" * 64
 
@@ -196,7 +193,7 @@ class TestRemerkleeableVectors:
 
     def test_long_bitlist_single_bit(self):
         """Test long bitlist with single bit set."""
-        bl = Bitlist([1], max_length=512)
+        bl = Bitlist(bits=[1], max_length=512)
         encoded = ssz.encode(bl)
         assert encoded.hex() == "03"
 
@@ -208,7 +205,7 @@ class TestRemerkleeableVectors:
 
     def test_long_bitlist_512_all_set(self):
         """Test long bitlist with all 512 bits set."""
-        bl = Bitlist([1] * 512, max_length=512)
+        bl = Bitlist(bits=[1] * 512, max_length=512)
         encoded = ssz.encode(bl)
         assert encoded.hex() == "ff" * 64 + "01"
 
@@ -220,7 +217,7 @@ class TestRemerkleeableVectors:
 
     def test_odd_bitvector_513(self):
         """Test odd bitvector with 513 bits all set."""
-        bv = Bitvector([1] * 513, length=513)
+        bv = Bitvector(bits=[1] * 513, length=513)
         encoded = ssz.encode(bv)
         assert encoded.hex() == "ff" * 64 + "01"
 
@@ -234,7 +231,7 @@ class TestRemerkleeableVectors:
 
     def test_odd_bitlist_513(self):
         """Test odd bitlist with 513 bits all set."""
-        bl = Bitlist([1] * 513, max_length=513)
+        bl = Bitlist(bits=[1] * 513, max_length=513)
         encoded = ssz.encode(bl)
         assert encoded.hex() == "ff" * 64 + "03"
 
@@ -327,7 +324,9 @@ class TestRemerkleeableVectors:
 
     def test_vector_bytes48(self):
         """Test Vector[byte, 48]."""
-        vec = Vector([U8(i) for i in range(48)], length=48, element_type=U8)
+        vec = Vector(
+            elements=[U8(i) for i in range(48)], length=48, element_type=U8
+        )
         encoded = ssz.encode(vec)
         expected = bytes(range(48))
         assert encoded == expected
@@ -355,7 +354,9 @@ class TestRemerkleeableVectors:
 
     def test_vector_uint16_2(self):
         """Test Vector[uint16, 2]."""
-        vec = Vector([U16(0x4567), U16(0x0123)], length=2, element_type=U16)
+        vec = Vector(
+            elements=[U16(0x4567), U16(0x0123)], length=2, element_type=U16
+        )
         encoded = ssz.encode(vec)
         assert encoded.hex() == "67452301"
 
@@ -365,7 +366,7 @@ class TestRemerkleeableVectors:
 
     def test_list_empty_small(self):
         """Test small empty list."""
-        lst = SSZList([], max_length=10, element_type=U8)
+        lst = SSZList(elements=[], max_length=10, element_type=U8)
         encoded = ssz.encode(lst)
         assert encoded.hex() == ""
 
@@ -375,7 +376,7 @@ class TestRemerkleeableVectors:
 
     def test_list_empty_big(self):
         """Test big empty list."""
-        lst = SSZList([], max_length=2048, element_type=U8)
+        lst = SSZList(elements=[], max_length=2048, element_type=U8)
         encoded = ssz.encode(lst)
         assert encoded.hex() == ""
 
@@ -385,7 +386,9 @@ class TestRemerkleeableVectors:
 
     def test_list_bytes_7(self):
         """Test List[byte, 7]."""
-        lst = SSZList([U8(i) for i in range(7)], max_length=7, element_type=U8)
+        lst = SSZList(
+            elements=[U8(i) for i in range(7)], max_length=7, element_type=U8
+        )
         encoded = ssz.encode(lst)
         assert encoded.hex() == "00010203040506"
 
@@ -398,7 +401,7 @@ class TestRemerkleeableVectors:
     def test_list_bytes_50(self):
         """Test List[byte, 50]."""
         lst = SSZList(
-            [U8(i) for i in range(50)], max_length=50, element_type=U8
+            elements=[U8(i) for i in range(50)], max_length=50, element_type=U8
         )
         encoded = ssz.encode(lst)
         expected = bytes(range(50))
@@ -421,7 +424,7 @@ class TestRemerkleeableVectors:
     def test_list_bytes_6_of_256(self):
         """Test List[byte, 256] with 6 elements."""
         lst = SSZList(
-            [U8(i) for i in range(6)], max_length=256, element_type=U8
+            elements=[U8(i) for i in range(6)], max_length=256, element_type=U8
         )
         encoded = ssz.encode(lst)
         assert encoded.hex() == "000102030405"
@@ -452,7 +455,7 @@ class TestRemerkleeableVectors:
         sig_test_data[95] = 0xFF
 
         vec = Vector(
-            [U8(x) for x in sig_test_data], length=96, element_type=U8
+            elements=[U8(x) for x in sig_test_data], length=96, element_type=U8
         )
         encoded = ssz.encode(vec)
 
@@ -509,7 +512,7 @@ class TestRemerkleeableVectors:
     def test_list_uint16(self):
         """Test List[uint16, 32]."""
         lst = SSZList(
-            [U16(0xAABB), U16(0xC0AD), U16(0xEEFF)],
+            elements=[U16(0xAABB), U16(0xC0AD), U16(0xEEFF)],
             max_length=32,
             element_type=U16,
         )
@@ -527,7 +530,7 @@ class TestRemerkleeableVectors:
     def test_list_uint32(self):
         """Test List[uint32, 128]."""
         lst = SSZList(
-            [U32(0xAABB), U32(0xC0AD), U32(0xEEFF)],
+            elements=[U32(0xAABB), U32(0xC0AD), U32(0xEEFF)],
             max_length=128,
             element_type=U32,
         )
@@ -548,7 +551,7 @@ class TestRemerkleeableVectors:
     def test_list_uint256(self):
         """Test List[uint256, 32]."""
         lst = SSZList(
-            [U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
+            elements=[U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
             max_length=32,
             element_type=U256,
         )
@@ -580,7 +583,9 @@ class TestRemerkleeableVectors:
     def test_list_uint256_long(self):
         """Test List[uint256, 128] with 19 elements."""
         lst = SSZList(
-            [U256(i) for i in range(1, 20)], max_length=128, element_type=U256
+            elements=[U256(i) for i in range(1, 20)],
+            max_length=128,
+            element_type=U256,
         )
         encoded = ssz.encode(lst)
         expected_hex = "".join(

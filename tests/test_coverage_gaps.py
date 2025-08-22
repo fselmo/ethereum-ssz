@@ -4,7 +4,6 @@ Tests to improve code coverage by hitting uncovered lines.
 This file specifically targets lines that aren't covered by other tests.
 """
 
-
 from typing import List as PyList
 
 import pytest
@@ -36,7 +35,7 @@ class TestBitfieldEdgeCases:
     def test_bitvector_edge_cases(self):
         """Test bitvector edge cases."""
         # Test __setitem__ with invalid index (line 45-47)
-        bv = Bitvector([True, False], length=2)
+        bv = Bitvector(bits=[True, False], length=2)
         with pytest.raises(IndexError):
             bv[5] = True
         with pytest.raises(IndexError):
@@ -59,7 +58,7 @@ class TestBitfieldEdgeCases:
         assert bl != 42
 
         # Test extend with too many bits (line 167-170)
-        bl = Bitlist([True] * 8, max_length=10)
+        bl = Bitlist(bits=[True] * 8, max_length=10)
         with pytest.raises(ValueError):
             bl.extend([True, True, True])  # Would exceed max
 
@@ -91,7 +90,7 @@ class TestCompositeEdgeCases:
     def test_vector_edge_cases(self):
         """Test vector edge cases."""
         # Test __setitem__ with wrong type (line 58 in composite.py)
-        vec = Vector([U8(1), U8(2)], length=2, element_type=U8)
+        vec = Vector(elements=[U8(1), U8(2)], length=2, element_type=U8)
         with pytest.raises(TypeError):
             vec[0] = "not a U8"
 
@@ -108,7 +107,7 @@ class TestCompositeEdgeCases:
     def test_list_edge_cases(self):
         """Test list edge cases."""
         # Test __setitem__ with wrong type (line 112-115)
-        lst = SSZList([U8(1)], max_length=5, element_type=U8)
+        lst = SSZList(elements=[U8(1)], max_length=5, element_type=U8)
         with pytest.raises(TypeError):
             lst[0] = "not a U8"
 
@@ -355,7 +354,7 @@ class TestMerkleEdgeCases:
         from ethereum_ssz.merkle import pack_vector_to_chunks
 
         # Test with booleans (line 320)
-        vec = Vector([True, False, True], length=3, element_type=bool)
+        vec = Vector(elements=[True, False, True], length=3, element_type=bool)
         chunks = pack_vector_to_chunks(vec)
         assert len(chunks) == 1
 
@@ -363,7 +362,7 @@ class TestMerkleEdgeCases:
         class BadType:
             pass
 
-        vec_bad = Vector([BadType()], length=1, element_type=BadType)
+        vec_bad = Vector(elements=[BadType()], length=1, element_type=BadType)
         with pytest.raises(ValueError):
             pack_vector_to_chunks(vec_bad)
 
@@ -372,7 +371,7 @@ class TestMerkleEdgeCases:
         from ethereum_ssz.merkle import pack_list_to_chunks
 
         # Test with booleans (line 420)
-        lst = SSZList([True, False], max_length=10, element_type=bool)
+        lst = SSZList(elements=[True, False], max_length=10, element_type=bool)
         chunks = pack_list_to_chunks(lst)
         assert len(chunks) == 1
 
@@ -383,7 +382,7 @@ class TestMerkleEdgeCases:
         # This would fail earlier in list creation, skipping
 
         # Padding test (line 432)
-        lst = SSZList([U8(1)], max_length=100, element_type=U8)
+        lst = SSZList(elements=[U8(1)], max_length=100, element_type=U8)
         chunks = pack_list_to_chunks(lst)
         assert chunks[0][-1] == 0  # Should be padded with zeros
 
@@ -406,21 +405,21 @@ class TestUnionEdgeCases:
         """Test union validation error cases."""
         # Invalid selector (line 30)
         with pytest.raises(ValueError):
-            Union([U8, U16], selector=5, value=U8(1))
+            Union(types=[U8, U16], selector=5, value=U8(1))
 
         # None expected but value provided (line 40)
         with pytest.raises(ValueError):
-            Union([None, U8], selector=0, value=U8(1))
+            Union(types=[None, U8], selector=0, value=U8(1))
 
         # Value expected but None provided (line 42)
         with pytest.raises(ValueError):
-            Union([U8, U16], selector=0, value=None)
+            Union(types=[U8, U16], selector=0, value=None)
 
     def test_union_equality(self):
         """Test union equality checks."""
-        u1 = Union([U8, U16], selector=0, value=U8(42))
-        u2 = Union([U8, U16], selector=0, value=U8(42))
-        u3 = Union([U8, U16], selector=1, value=U16(42))
+        u1 = Union(types=[U8, U16], selector=0, value=U8(42))
+        u2 = Union(types=[U8, U16], selector=0, value=U8(42))
+        u3 = Union(types=[U8, U16], selector=1, value=U16(42))
 
         # Test equality (line 47-49)
         assert u1 == u2
@@ -441,7 +440,7 @@ class TestOffsetHandling:
             b: SSZList  # Variable size
             c: U16
 
-        lst = SSZList([U8(1), U8(2)], max_length=10, element_type=U8)
+        lst = SSZList(elements=[U8(1), U8(2)], max_length=10, element_type=U8)
         obj = VarContainer(a=U8(10), b=lst, c=U16(300))
 
         # This should trigger the offset encoding path
@@ -469,8 +468,8 @@ class TestContainerVariableFields:
             fixed2: U8
             var2: SSZList
 
-        lst1 = SSZList([U8(1), U8(2)], max_length=10, element_type=U8)
-        lst2 = SSZList([U16(100)], max_length=5, element_type=U16)
+        lst1 = SSZList(elements=[U8(1), U8(2)], max_length=10, element_type=U8)
+        lst2 = SSZList(elements=[U16(100)], max_length=5, element_type=U16)
 
         obj = MixedContainer(
             fixed1=U32(1000), var1=lst1, fixed2=U8(42), var2=lst2

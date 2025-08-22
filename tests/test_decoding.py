@@ -4,8 +4,6 @@ Test SSZ decoding functionality.
 These tests verify that we can properly decode SSZ-encoded data back to objects.
 """
 
-
-
 from ethereum_types.bytes import Bytes32
 from ethereum_types.numeric import U8, U32, U64
 
@@ -90,7 +88,9 @@ class TestVectorDecoding:
     def test_decode_uint16_vector(self):
         """Test decoding a vector of uint16s."""
         # Create and encode a vector
-        original = Vector([U16(1), U16(2), U16(3)], length=3, element_type=U16)
+        original = Vector(
+            elements=[U16(1), U16(2), U16(3)], length=3, element_type=U16
+        )
         encoded = ssz.encode(original)
 
         # Decode it back
@@ -104,7 +104,7 @@ class TestVectorDecoding:
     def test_decode_bool_vector(self):
         """Test decoding a vector of booleans."""
         original = Vector(
-            [True, False, True, True], length=4, element_type=bool
+            elements=[True, False, True, True], length=4, element_type=bool
         )
         encoded = ssz.encode(original)
 
@@ -124,7 +124,9 @@ class TestListDecoding:
         """Test decoding a list of uint32s."""
         # Create and encode a list
         original = SSZList(
-            [U32(10), U32(20), U32(30)], max_length=10, element_type=U32
+            elements=[U32(10), U32(20), U32(30)],
+            max_length=10,
+            element_type=U32,
         )
         encoded = ssz.encode(original)
 
@@ -138,7 +140,7 @@ class TestListDecoding:
 
     def test_decode_empty_list(self):
         """Test decoding an empty list."""
-        original = SSZList([], max_length=5, element_type=U8)
+        original = SSZList(elements=[], max_length=5, element_type=U8)
         encoded = ssz.encode(original)
 
         decoded = decode_list(encoded, U8, 5)
@@ -152,7 +154,7 @@ class TestBitfieldDecoding:
 
     def test_decode_bitvector(self):
         """Test decoding a bitvector."""
-        original = Bitvector([True, False, True, True, False], length=5)
+        original = Bitvector(bits=[True, False, True, True, False], length=5)
         encoded = ssz.encode(original)
 
         # Bitvector knows how to deserialize itself
@@ -167,7 +169,7 @@ class TestBitfieldDecoding:
 
     def test_decode_bitlist(self):
         """Test decoding a bitlist."""
-        original = Bitlist([True, True, False, True], max_length=10)
+        original = Bitlist(bits=[True, True, False, True], max_length=10)
         encoded = ssz.encode(original)
 
         # Bitlist knows how to deserialize itself
@@ -194,7 +196,7 @@ class TestRoundTrip:
 
         # Create a complex object
         values_vec = Vector(
-            [U8(i) for i in range(5)], length=5, element_type=U8
+            elements=[U8(i) for i in range(5)], length=5, element_type=U8
         )
         original = ComplexContainer(count=U32(5), values=values_vec, flag=True)
 

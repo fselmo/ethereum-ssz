@@ -8,8 +8,8 @@ Bitlists are variable-length bit sequences with a maximum length.
 from collections.abc import Iterator, Sequence
 from typing import Any, Union
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from ethereum_types.bytes import Bytes32
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class Bitvector(BaseModel):
@@ -18,20 +18,22 @@ class Bitvector(BaseModel):
 
     In SSZ, bitvectors are packed into bytes, with bits indexed from 0.
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     bits: list[bool]
     length: int
-    
-    @field_validator('bits', mode='before')
+
+    @field_validator("bits", mode="before")
     @classmethod
-    def convert_bits(cls, v: Union[Sequence[bool], Sequence[int]]) -> list[bool]:
+    def convert_bits(
+        cls, v: Union[Sequence[bool], Sequence[int]]
+    ) -> list[bool]:
         """Convert input to list of bools."""
         return [bool(bit) for bit in v]
-    
-    @model_validator(mode='after')
-    def validate_length(self) -> 'Bitvector':
+
+    @model_validator(mode="after")
+    def validate_length(self) -> "Bitvector":
         """Validate that bits match the specified length."""
         if len(self.bits) != self.length:
             raise ValueError(
@@ -133,20 +135,22 @@ class Bitlist(BaseModel):
 
     In SSZ, bitlists are serialized with a sentinel bit to mark the length.
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     bits: list[bool]
     max_length: int
-    
-    @field_validator('bits', mode='before')
+
+    @field_validator("bits", mode="before")
     @classmethod
-    def convert_bits(cls, v: Union[Sequence[bool], Sequence[int]]) -> list[bool]:
+    def convert_bits(
+        cls, v: Union[Sequence[bool], Sequence[int]]
+    ) -> list[bool]:
         """Convert input to list of bools."""
         return [bool(bit) for bit in v]
-    
-    @model_validator(mode='after')
-    def validate_max_length(self) -> 'Bitlist':
+
+    @model_validator(mode="after")
+    def validate_max_length(self) -> "Bitlist":
         """Validate that bits don't exceed max_length."""
         if len(self.bits) > self.max_length:
             raise ValueError(
@@ -174,9 +178,7 @@ class Bitlist(BaseModel):
         """Check equality."""
         if not isinstance(other, Bitlist):
             return False
-        return (
-            self.bits == other.bits and self.max_length == other.max_length
-        )
+        return self.bits == other.bits and self.max_length == other.max_length
 
     def __repr__(self) -> str:
         """String representation."""

@@ -176,7 +176,9 @@ def encode_list(ssz_list: SSZList[Any]) -> Bytes:
     the encoded elements.
     """
     # First encode the list contents like a vector (use .elements for Pydantic)
-    variable_sizes = [is_variable_size(type(elem)) for elem in ssz_list.elements]
+    variable_sizes = [
+        is_variable_size(type(elem)) for elem in ssz_list.elements
+    ]
     element_types = [type(elem) for elem in ssz_list.elements]
 
     encoded_elements = encode_composite(

@@ -65,11 +65,17 @@ class TestComplexVectors:
     def test_vector_of_vectors(self):
         """Test encoding Vector[Vector[uint8, 3], 2]."""
         # Create inner vectors
-        inner1 = Vector([U8(1), U8(2), U8(3)], length=3, element_type=U8)
-        inner2 = Vector([U8(4), U8(5), U8(6)], length=3, element_type=U8)
+        inner1 = Vector(
+            elements=[U8(1), U8(2), U8(3)], length=3, element_type=U8
+        )
+        inner2 = Vector(
+            elements=[U8(4), U8(5), U8(6)], length=3, element_type=U8
+        )
 
         # Create outer vector
-        outer = Vector([inner1, inner2], length=2, element_type=Vector)
+        outer = Vector(
+            elements=[inner1, inner2], length=2, element_type=Vector
+        )
 
         # Encode
         encoded = ssz.encode(outer)
@@ -81,7 +87,9 @@ class TestComplexVectors:
 
     def test_vector_uint16_exact(self):
         """Test Vector[uint16, 2] with exact known encoding."""
-        vec = Vector([U16(0x4567), U16(0x0123)], length=2, element_type=U16)
+        vec = Vector(
+            elements=[U16(0x4567), U16(0x0123)], length=2, element_type=U16
+        )
         encoded = ssz.encode(vec)
 
         # Little-endian encoding
@@ -95,7 +103,9 @@ class TestComplexVectors:
 
     def test_long_byte_vector_48(self):
         """Test Vector[byte, 48] (like BLS public key)."""
-        vec = Vector([U8(i) for i in range(48)], length=48, element_type=U8)
+        vec = Vector(
+            elements=[U8(i) for i in range(48)], length=48, element_type=U8
+        )
         encoded = ssz.encode(vec)
 
         expected = bytes(range(48))
@@ -118,7 +128,7 @@ class TestComplexVectors:
         sig_test_data[95] = 0xFF
 
         vec = Vector(
-            [U8(x) for x in sig_test_data], length=96, element_type=U8
+            elements=[U8(x) for x in sig_test_data], length=96, element_type=U8
         )
         encoded = ssz.encode(vec)
 
@@ -142,7 +152,7 @@ class TestComplexLists:
     def test_uint16_list(self):
         """Test List[uint16, 32] encoding."""
         lst = SSZList(
-            [U16(0xAABB), U16(0xC0AD), U16(0xEEFF)],
+            elements=[U16(0xAABB), U16(0xC0AD), U16(0xEEFF)],
             max_length=32,
             element_type=U16,
         )
@@ -158,7 +168,7 @@ class TestComplexLists:
     def test_uint32_list(self):
         """Test List[uint32, 128] encoding."""
         lst = SSZList(
-            [U32(0xAABB), U32(0xC0AD), U32(0xEEFF)],
+            elements=[U32(0xAABB), U32(0xC0AD), U32(0xEEFF)],
             max_length=128,
             element_type=U32,
         )
@@ -172,7 +182,7 @@ class TestComplexLists:
 
     def test_empty_list_small(self):
         """Test empty List[byte, 10]."""
-        lst = SSZList([], max_length=10, element_type=U8)
+        lst = SSZList(elements=[], max_length=10, element_type=U8)
         encoded = ssz.encode(lst)
 
         assert encoded == b""
@@ -184,7 +194,7 @@ class TestComplexLists:
 
     def test_empty_list_large(self):
         """Test empty List[byte, 2048]."""
-        lst = SSZList([], max_length=2048, element_type=U8)
+        lst = SSZList(elements=[], max_length=2048, element_type=U8)
         encoded = ssz.encode(lst)
 
         assert encoded == b""
@@ -196,7 +206,9 @@ class TestComplexLists:
 
     def test_byte_list_exact_7(self):
         """Test List[byte, 7] with exactly 7 elements."""
-        lst = SSZList([U8(i) for i in range(7)], max_length=7, element_type=U8)
+        lst = SSZList(
+            elements=[U8(i) for i in range(7)], max_length=7, element_type=U8
+        )
         encoded = ssz.encode(lst)
 
         assert encoded == bytes(range(7))
@@ -208,7 +220,7 @@ class TestComplexLists:
     def test_byte_list_50(self):
         """Test List[byte, 50] with 50 elements."""
         lst = SSZList(
-            [U8(i) for i in range(50)], max_length=50, element_type=U8
+            elements=[U8(i) for i in range(50)], max_length=50, element_type=U8
         )
         encoded = ssz.encode(lst)
 
@@ -226,7 +238,7 @@ class TestComplexLists:
     def test_byte_list_partial_256(self):
         """Test List[byte, 256] with only 6 elements."""
         lst = SSZList(
-            [U8(i) for i in range(6)], max_length=256, element_type=U8
+            elements=[U8(i) for i in range(6)], max_length=256, element_type=U8
         )
         encoded = ssz.encode(lst)
 
@@ -254,10 +266,12 @@ class TestNestedStructures:
 
     def test_list_of_vectors(self):
         """Test List[Vector[uint16, 2], 10]."""
-        vec1 = Vector([U16(1), U16(2)], length=2, element_type=U16)
-        vec2 = Vector([U16(3), U16(4)], length=2, element_type=U16)
+        vec1 = Vector(elements=[U16(1), U16(2)], length=2, element_type=U16)
+        vec2 = Vector(elements=[U16(3), U16(4)], length=2, element_type=U16)
 
-        lst = SSZList([vec1, vec2], max_length=10, element_type=Vector)
+        lst = SSZList(
+            elements=[vec1, vec2], max_length=10, element_type=Vector
+        )
         encoded = ssz.encode(lst)
 
         # Little-endian uint16s
@@ -268,12 +282,14 @@ class TestNestedStructures:
 
     def test_vector_of_lists(self):
         """Test Vector[List[uint8, 4], 2]."""
-        lst1 = SSZList([U8(1), U8(2)], max_length=4, element_type=U8)
-        lst2 = SSZList([U8(3), U8(4), U8(5)], max_length=4, element_type=U8)
+        lst1 = SSZList(elements=[U8(1), U8(2)], max_length=4, element_type=U8)
+        lst2 = SSZList(
+            elements=[U8(3), U8(4), U8(5)], max_length=4, element_type=U8
+        )
 
         # Note: This will require offset encoding for variable-size lists
         # For now, we'll just verify the types work
-        vec = Vector([lst1, lst2], length=2, element_type=SSZList)
+        vec = Vector(elements=[lst1, lst2], length=2, element_type=SSZList)
 
         # This test will need updating when offset encoding is implemented
         # for variable-size elements in vectors
@@ -283,17 +299,23 @@ class TestNestedStructures:
     def test_deeply_nested_vectors(self):
         """Test Vector[Vector[Vector[uint8, 2], 2], 2]."""
         # Innermost level
-        inner1 = Vector([U8(1), U8(2)], length=2, element_type=U8)
-        inner2 = Vector([U8(3), U8(4)], length=2, element_type=U8)
-        inner3 = Vector([U8(5), U8(6)], length=2, element_type=U8)
-        inner4 = Vector([U8(7), U8(8)], length=2, element_type=U8)
+        inner1 = Vector(elements=[U8(1), U8(2)], length=2, element_type=U8)
+        inner2 = Vector(elements=[U8(3), U8(4)], length=2, element_type=U8)
+        inner3 = Vector(elements=[U8(5), U8(6)], length=2, element_type=U8)
+        inner4 = Vector(elements=[U8(7), U8(8)], length=2, element_type=U8)
 
         # Middle level
-        middle1 = Vector([inner1, inner2], length=2, element_type=Vector)
-        middle2 = Vector([inner3, inner4], length=2, element_type=Vector)
+        middle1 = Vector(
+            elements=[inner1, inner2], length=2, element_type=Vector
+        )
+        middle2 = Vector(
+            elements=[inner3, inner4], length=2, element_type=Vector
+        )
 
         # Outer level
-        outer = Vector([middle1, middle2], length=2, element_type=Vector)
+        outer = Vector(
+            elements=[middle1, middle2], length=2, element_type=Vector
+        )
 
         encoded = ssz.encode(outer)
         assert encoded == b"\x01\x02\x03\x04\x05\x06\x07\x08"
@@ -308,7 +330,7 @@ class TestUint256Lists:
     def test_uint256_list_small(self):
         """Test List[uint256, 32] with 3 elements."""
         lst = SSZList(
-            [U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
+            elements=[U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
             max_length=32,
             element_type=U256,
         )
@@ -332,7 +354,9 @@ class TestUint256Lists:
     def test_uint256_list_long(self):
         """Test List[uint256, 128] with 19 elements."""
         lst = SSZList(
-            [U256(i) for i in range(1, 20)], max_length=128, element_type=U256
+            elements=[U256(i) for i in range(1, 20)],
+            max_length=128,
+            element_type=U256,
         )
 
         encoded = ssz.encode(lst)

@@ -102,7 +102,9 @@ def test_hash_tree_root_bytes32() -> None:
 def test_hash_tree_root_vector() -> None:
     """Test hash tree root of Vector."""
     # Vector of U8 values
-    vec = Vector([U8(1), U8(2), U8(3), U8(4)], length=4, element_type=U8)
+    vec = Vector(
+        elements=[U8(1), U8(2), U8(3), U8(4)], length=4, element_type=U8
+    )
 
     # Each U8 becomes a 32-byte chunk, then merkleized
     htr = hash_tree_root(vec)
@@ -118,7 +120,7 @@ def test_hash_tree_root_empty_vector() -> None:
     """Test hash tree root of empty vector."""
     # This would be a vector of length 0, which isn't typical
     # but we should handle it gracefully
-    vec = Vector([], length=0, element_type=U8)
+    vec = Vector(elements=[], length=0, element_type=U8)
     htr = hash_tree_root(vec)
     assert isinstance(htr, Bytes32)
 
@@ -126,21 +128,23 @@ def test_hash_tree_root_empty_vector() -> None:
 def test_hash_tree_root_list() -> None:
     """Test hash tree root of List."""
     # List with some elements
-    lst = SSZList([U8(1), U8(2), U8(3)], max_length=10, element_type=U8)
+    lst = SSZList(
+        elements=[U8(1), U8(2), U8(3)], max_length=10, element_type=U8
+    )
 
     htr = hash_tree_root(lst)
     assert isinstance(htr, Bytes32)
     assert len(htr) == 32
 
     # Different length should give different root
-    lst2 = SSZList([U8(1), U8(2)], max_length=10, element_type=U8)
+    lst2 = SSZList(elements=[U8(1), U8(2)], max_length=10, element_type=U8)
     htr2 = hash_tree_root(lst2)
     assert htr != htr2
 
 
 def test_hash_tree_root_empty_list() -> None:
     """Test hash tree root of empty list."""
-    lst = SSZList([], max_length=10, element_type=U8)
+    lst = SSZList(elements=[], max_length=10, element_type=U8)
     htr = hash_tree_root(lst)
     assert isinstance(htr, Bytes32)
     assert len(htr) == 32
@@ -155,8 +159,8 @@ def test_hash_tree_root_list_same_elements_different_max() -> None:
     """
     # Use max_lengths that result in different tree depths
     # max=32 fits in 1 chunk (32 bytes), max=64 needs 2 chunks -> different tree depths
-    lst1 = SSZList([U8(1), U8(2)], max_length=32, element_type=U8)
-    lst2 = SSZList([U8(1), U8(2)], max_length=64, element_type=U8)
+    lst1 = SSZList(elements=[U8(1), U8(2)], max_length=32, element_type=U8)
+    lst2 = SSZList(elements=[U8(1), U8(2)], max_length=64, element_type=U8)
 
     # Should have different roots due to different tree structure
     htr1 = hash_tree_root(lst1)

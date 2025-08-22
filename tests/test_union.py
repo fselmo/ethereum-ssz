@@ -42,6 +42,7 @@ def chunk(hex_str: str) -> str:
 
 # Test container for union tests
 
+
 class SingleFieldTestStruct(Container):
     """Container with a single byte field."""
 
@@ -195,7 +196,7 @@ class TestComplexUnion:
     def test_union_with_vector(self):
         """Test Union containing a Vector type."""
         UnionType = create_union_class("UnionType", [U8, Vector])
-        vec = Vector([U8(1), U8(2), U8(3)], length=3, element_type=U8)
+        vec = Vector(elements=[U8(1), U8(2), U8(3)], length=3, element_type=U8)
         u = UnionType(selector=1, value=vec)
 
         # Selector 01 + vector encoding

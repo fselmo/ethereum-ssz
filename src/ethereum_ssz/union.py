@@ -6,8 +6,8 @@ Unions are tagged with a selector to indicate which type is active.
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from ethereum_types.bytes import Bytes32
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class Union(BaseModel):
@@ -18,27 +18,38 @@ class Union(BaseModel):
     - A selector (uint8) indicating which type is active (0-indexed)
     - A value of that type (or None for null variant)
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    types: list[type]
+
+    types: list[type | None]
     selector: int
     value: Any
-    
-    @field_validator('selector')
+
+    @field_validator("types")
+    @classmethod
+    def validate_types(cls, v: list) -> list:
+        """Validate types list, allowing None."""
+        for item in v:
+            if item is not None and not isinstance(item, type):
+                raise ValueError(
+                    f"Each item in types must be a type or None, got {item}"
+                )
+        return v
+
+    @field_validator("selector")
     @classmethod
     def validate_selector(cls, v: int, info) -> int:
         """Validate selector is within valid range."""
-        if 'types' in info.data:
-            types = info.data['types']
+        if "types" in info.data:
+            types = info.data["types"]
             if v < 0 or v >= len(types):
                 raise ValueError(
                     f"Invalid selector {v} for Union with {len(types)} types"
                 )
         return v
-    
-    @model_validator(mode='after')
-    def validate_value_matches_type(self) -> 'Union':
+
+    @model_validator(mode="after")
+    def validate_value_matches_type(self) -> "Union":
         """Validate that value matches the selected type."""
         expected_type = self.types[self.selector]
         if expected_type is None:
@@ -123,7 +134,9 @@ def create_union_class(name: str, types: list[type]) -> type[Union]:
     class SpecificUnion(Union):
         def __init__(self, selector: int, value: Any, **kwargs):
             # Always pass the types list
-            super().__init__(types=types, selector=selector, value=value, **kwargs)
+            super().__init__(
+                types=types, selector=selector, value=value, **kwargs
+            )
 
         def __repr__(self) -> str:
             type_names = []

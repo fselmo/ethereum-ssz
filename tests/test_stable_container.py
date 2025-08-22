@@ -2,7 +2,6 @@
 Test StableContainer implementation.
 """
 
-
 from typing import Optional
 
 import pytest
@@ -178,7 +177,9 @@ class TestStableContainerComplex:
             count: Optional[U32] = None
             _max_fields: int = 4
 
-        lst = SSZList([U8(1), U8(2), U8(3)], max_length=10, element_type=U8)
+        lst = SSZList(
+            elements=[U8(1), U8(2), U8(3)], max_length=10, element_type=U8
+        )
         obj = TestStable(values=lst, count=U32(3))
 
         assert obj.values == lst

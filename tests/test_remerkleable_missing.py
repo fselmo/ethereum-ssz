@@ -3,7 +3,6 @@ Tests for missing test vectors from remerkleable.
 This file ports the remaining ~53% of test cases not yet covered.
 """
 
-
 from hashlib import sha256
 from typing import List as PyList
 
@@ -55,15 +54,14 @@ def merge(a: str, branch: list[str]) -> str:
 
 # Container definitions matching remerkleable
 
+
 class SingleFieldTestStruct(Container):
     A: U8
-
 
 
 class SmallTestStruct(Container):
     A: U16
     B: U16
-
 
 
 class FixedTestStruct(Container):
@@ -72,12 +70,10 @@ class FixedTestStruct(Container):
     C: U32
 
 
-
 class VarTestStruct(Container):
     A: U16
     B: SSZList  # List[uint16, 1024]
     C: U8
-
 
 
 class ComplexTestStruct(Container):
@@ -116,7 +112,7 @@ class TestMissingVectors:
     def test_bytelist_50(self):
         """Test List[byte, 50] with 50 elements."""
         lst = SSZList(
-            [U8(i) for i in range(50)], max_length=50, element_type=U8
+            elements=[U8(i) for i in range(50)], max_length=50, element_type=U8
         )
 
         encoded = ssz.encode(lst)
@@ -137,7 +133,7 @@ class TestMissingVectors:
     def test_bytelist_6_256(self):
         """Test List[byte, 256] with only 6 elements."""
         lst = SSZList(
-            [U8(i) for i in range(6)], max_length=256, element_type=U8
+            elements=[U8(i) for i in range(6)], max_length=256, element_type=U8
         )
 
         encoded = ssz.encode(lst)
@@ -157,7 +153,7 @@ class TestMissingVectors:
     def test_uint256_list(self):
         """Test List[uint256, 32] with 3 elements."""
         lst = SSZList(
-            [U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
+            elements=[U256(0xAABB), U256(0xC0AD), U256(0xEEFF)],
             max_length=32,
             element_type=U256,
         )
@@ -187,7 +183,9 @@ class TestMissingVectors:
     def test_uint256_list_long(self):
         """Test List[uint256, 128] with 19 elements."""
         lst = SSZList(
-            [U256(i) for i in range(1, 20)], max_length=128, element_type=U256
+            elements=[U256(i) for i in range(1, 20)],
+            max_length=128,
+            element_type=U256,
         )
 
         # Encode
@@ -266,7 +264,7 @@ class TestMissingVectors:
         """Test VarTestStruct with nil list."""
         container = VarTestStruct(
             A=U16(0xABCD),
-            B=SSZList([], max_length=1024, element_type=U16),
+            B=SSZList(elements=[], max_length=1024, element_type=U16),
             C=U8(0xFF),
         )
 
@@ -285,7 +283,7 @@ class TestMissingVectors:
         """Test VarTestStruct with empty list."""
         container = VarTestStruct(
             A=U16(0xABCD),
-            B=SSZList([], max_length=1024, element_type=U16),
+            B=SSZList(elements=[], max_length=1024, element_type=U16),
             C=U8(0xFF),
         )
 
@@ -305,7 +303,9 @@ class TestMissingVectors:
         container = VarTestStruct(
             A=U16(0xABCD),
             B=SSZList(
-                [U16(1), U16(2), U16(3)], max_length=1024, element_type=U16
+                elements=[U16(1), U16(2), U16(3)],
+                max_length=1024,
+                element_type=U16,
             ),
             C=U8(0xFF),
         )
@@ -333,14 +333,16 @@ class TestMissingVectors:
         var_struct_e = VarTestStruct(
             A=U16(0xABCD),
             B=SSZList(
-                [U16(1), U16(2), U16(3)], max_length=1024, element_type=U16
+                elements=[U16(1), U16(2), U16(3)],
+                max_length=1024,
+                element_type=U16,
             ),
             C=U8(0xFF),
         )
 
         # Create Vector of FixedTestStruct for field F
         fixed_structs = Vector(
-            [
+            elements=[
                 FixedTestStruct(
                     A=U8(0xCC), B=U64(0x4242424242424242), C=U32(0x13371337)
                 ),
@@ -360,11 +362,11 @@ class TestMissingVectors:
 
         # Create Vector of VarTestStruct for field G
         var_structs = Vector(
-            [
+            elements=[
                 VarTestStruct(
                     A=U16(0xDEAD),
                     B=SSZList(
-                        [U16(1), U16(2), U16(3)],
+                        elements=[U16(1), U16(2), U16(3)],
                         max_length=1024,
                         element_type=U16,
                     ),
@@ -373,7 +375,7 @@ class TestMissingVectors:
                 VarTestStruct(
                     A=U16(0xBEEF),
                     B=SSZList(
-                        [U16(4), U16(5), U16(6)],
+                        elements=[U16(4), U16(5), U16(6)],
                         max_length=1024,
                         element_type=U16,
                     ),
@@ -388,11 +390,15 @@ class TestMissingVectors:
         container = ComplexTestStruct(
             A=U16(0xAABB),
             B=SSZList(
-                [U16(0x1122), U16(0x3344)], max_length=128, element_type=U16
+                elements=[U16(0x1122), U16(0x3344)],
+                max_length=128,
+                element_type=U16,
             ),
             C=U8(0xFF),
             D=SSZList(
-                [U8(ord(c)) for c in "foobar"], max_length=256, element_type=U8
+                elements=[U8(ord(c)) for c in "foobar"],
+                max_length=256,
+                element_type=U8,
             ),
             E=var_struct_e,
             F=fixed_structs,
@@ -420,7 +426,9 @@ class TestMissingVectors:
         )
 
         # Create vector of signatures
-        three_sigs = Vector([sig1, sig2, sig3], length=3, element_type=Vector)
+        three_sigs = Vector(
+            elements=[sig1, sig2, sig3], length=3, element_type=Vector
+        )
 
         # Test encoding
         encoded = ssz.encode(three_sigs)
@@ -456,7 +464,9 @@ class TestMissingVectors:
         var_struct = VarTestStruct(
             A=U16(0xABCD),
             B=SSZList(
-                [U16(1), U16(2), U16(3)], max_length=1024, element_type=U16
+                elements=[U16(1), U16(2), U16(3)],
+                max_length=1024,
+                element_type=U16,
             ),
             C=U8(0xFF),
         )

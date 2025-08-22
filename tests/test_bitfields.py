@@ -218,7 +218,8 @@ class TestBitlist:
     def test_bitlist_TFTFFFTTFTFFFFTT(self):
         """Test Bitlist[16] with all 16 bits."""
         bl = Bitlist(
-            bits=[1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], max_length=16
+            bits=[1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1],
+            max_length=16,
         )
 
         # Bits: 1010001101000011 = 0xc2c5
